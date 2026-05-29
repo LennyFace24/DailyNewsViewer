@@ -1,4 +1,4 @@
-<h1 aligh="center">DailyNewsViewer</h1>
+<h1 align="center">DailyNewsViewer</h1>
 
 
 自用
