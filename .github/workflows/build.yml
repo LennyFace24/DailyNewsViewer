@@ -2,9 +2,13 @@ name: Build & Release APK
 
 on:
   push:
+    branches:
+      - main
     tags:
-      - 'v*' # 当推送 v 开头的 tag 时触发
-  workflow_dispatch: # 允许手动触发
+      - 'v*'
+  pull_request:
+    branches:
+      - main
 
 jobs:
   build:
@@ -39,7 +43,9 @@ jobs:
         run: npx cap sync android
 
       - name: Build Release APK
-        run: cd android && ./gradlew assembleRelease
+        run: |
+          chmod +x android/gradlew
+          cd android && ./gradlew assembleRelease
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
