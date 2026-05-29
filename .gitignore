@@ -1,0 +1,75 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+build/
+.svelte-kit/
+dist/
+.next/
+out/
+
+# Android build
+android/app/build/
+android/.gradle/
+android/capacitor-cordova-android-plugins/build/
+android/capacitor-android/build/
+android/capacitor-preferences/build/
+android/capacitor-community-http/build/
+android/.idea/
+*.apk
+*.aab
+
+# iOS build
+ios/App/Pods/
+ios/App/build/
+*.ipa
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Cache
+.cache/
+.parcel-cache/
+*.tsbuildinfo
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Capacitor
+android/app/src/main/assets/public/
+ios/App/App/public/
+
+# Keystore (keep local only)
+*.keystore
+*.jks
+android/dailytech.keystore
+
+# Temp files
+*.tmp
+*.temp
