@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { Globe, Type, Eye, CheckCheck, Trash2, RotateCcw, Info } from 'lucide-svelte';
+  import { Globe, Layout, Eye, CheckCheck, Trash2, RotateCcw, Info } from 'lucide-svelte';
   import { settings, updateSetting, resetSettings } from '$lib/stores/settings';
   import { articles, markAllAsRead } from '$lib/stores/articles';
   import { ArticleCache } from '$lib/services/storage';
@@ -23,36 +23,27 @@
 
     <!-- 代理设置 -->
     <section class="mb-6">
-      <h2 class="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-        <Globe class="w-3.5 h-3.5" /> 网络代理
-      </h2>
+      <h2 class="section-title"><Globe class="w-3.5 h-3.5" /> 网络代理</h2>
       <div class="glass-card overflow-hidden">
-        <div class="p-4 flex items-center justify-between border-b border-white/5">
+        <div class="setting-row">
           <div>
-            <span class="text-sm font-medium">启用代理</span>
-            <p class="text-xs text-muted-foreground mt-0.5">通过代理服务器访问网络</p>
+            <div class="setting-label">启用代理</div>
+            <div class="setting-desc">通过代理服务器访问网络</div>
           </div>
-          <button
-            class="w-12 h-7 rounded-full transition-colors {$settings.proxyEnabled ? 'bg-white/25' : 'bg-white/10'}"
-            on:click={() => updateSetting('proxyEnabled', !$settings.proxyEnabled)}
-            type="button"
-          >
-            <div class="w-5 h-5 bg-white rounded-full transition-transform ml-0.5
-                        {$settings.proxyEnabled ? 'translate-x-5' : ''}" />
-          </button>
+          <div class="toggle" class:active={$settings.proxyEnabled} on:click={() => updateSetting('proxyEnabled', !$settings.proxyEnabled)}>
+            <div class="toggle-thumb" class:active={$settings.proxyEnabled} />
+          </div>
         </div>
 
         {#if $settings.proxyEnabled}
-          <div class="p-4 space-y-3">
+          <div class="p-4 space-y-3 border-t border-white/5">
             <div>
-              <label class="text-xs text-muted-foreground mb-1 block">代理类型</label>
+              <label class="input-label">代理类型</label>
               <div class="flex gap-2">
                 {#each ['http', 'https', 'socks5'] as type}
                   <button
-                    class="flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors
-                           {$settings.proxyType === type ? 'bg-white/20 text-foreground' : 'bg-white/5 text-muted-foreground hover:bg-white/10'}"
+                    class="option-btn {$settings.proxyType === type ? 'active' : ''}"
                     on:click={() => updateSetting('proxyType', type)}
-                    type="button"
                   >
                     {type.toUpperCase()}
                   </button>
@@ -61,21 +52,21 @@
             </div>
             <div class="flex gap-3">
               <div class="flex-1">
-                <label class="text-xs text-muted-foreground mb-1 block">主机</label>
+                <label class="input-label">主机</label>
                 <input
                   value={$settings.proxyHost}
                   on:change={(e) => updateSetting('proxyHost', e.currentTarget.value)}
                   placeholder="127.0.0.1"
-                  class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-white/20"
+                  class="input-field"
                 />
               </div>
               <div class="w-24">
-                <label class="text-xs text-muted-foreground mb-1 block">端口</label>
+                <label class="input-label">端口</label>
                 <input
                   value={$settings.proxyPort}
                   on:change={(e) => updateSetting('proxyPort', e.currentTarget.value)}
                   placeholder="7890"
-                  class="w-full bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-sm outline-none focus:border-white/20"
+                  class="input-field"
                 />
               </div>
             </div>
@@ -86,34 +77,15 @@
 
     <!-- 外观 -->
     <section class="mb-6">
-      <h2 class="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-        <Type class="w-3.5 h-3.5" /> 外观
-      </h2>
+      <h2 class="section-title"><Layout class="w-3.5 h-3.5" /> 外观</h2>
       <div class="glass-card overflow-hidden">
-        <div class="p-4 border-b border-white/5">
-          <span class="text-sm font-medium">字体大小</span>
-          <div class="flex gap-2 mt-3">
-            {#each ['small', 'medium', 'large'] as size}
-              <button
-                class="flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors
-                       {$settings.fontSize === size ? 'bg-white/20 text-foreground' : 'bg-white/5 text-muted-foreground hover:bg-white/10'}"
-                on:click={() => updateSetting('fontSize', size)}
-                type="button"
-              >
-                {size === 'small' ? '小' : size === 'medium' ? '中' : '大'}
-              </button>
-            {/each}
-          </div>
-        </div>
-        <div class="p-4">
-          <span class="text-sm font-medium">卡片样式</span>
-          <div class="flex gap-2 mt-3">
+        <div class="setting-row">
+          <div class="setting-label">卡片样式</div>
+          <div class="flex gap-2">
             {#each ['compact', 'comfortable', 'spacious'] as style}
               <button
-                class="flex-1 px-3 py-2 rounded-lg text-xs font-medium transition-colors
-                       {$settings.cardStyle === style ? 'bg-white/20 text-foreground' : 'bg-white/5 text-muted-foreground hover:bg-white/10'}"
+                class="option-btn {$settings.cardStyle === style ? 'active' : ''}"
                 on:click={() => updateSetting('cardStyle', style)}
-                type="button"
               >
                 {style === 'compact' ? '紧凑' : style === 'comfortable' ? '舒适' : '宽松'}
               </button>
@@ -125,108 +97,68 @@
 
     <!-- 阅读 -->
     <section class="mb-6">
-      <h2 class="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-        <Eye class="w-3.5 h-3.5" /> 阅读
-      </h2>
+      <h2 class="section-title"><Eye class="w-3.5 h-3.5" /> 阅读</h2>
       <div class="glass-card overflow-hidden">
-        <div class="p-4 flex items-center justify-between border-b border-white/5">
-          <span class="text-sm">显示图片</span>
-          <button
-            class="w-12 h-7 rounded-full transition-colors {$settings.showImages ? 'bg-white/25' : 'bg-white/10'}"
-            on:click={() => updateSetting('showImages', !$settings.showImages)}
-            type="button"
-          >
-            <div class="w-5 h-5 bg-white rounded-full transition-transform ml-0.5
-                        {$settings.showImages ? 'translate-x-5' : ''}" />
-          </button>
+        <div class="setting-row">
+          <div class="setting-label">显示图片</div>
+          <div class="toggle" class:active={$settings.showImages} on:click={() => updateSetting('showImages', !$settings.showImages)}>
+            <div class="toggle-thumb" class:active={$settings.showImages} />
+          </div>
         </div>
-        <div class="p-4 flex items-center justify-between">
-          <span class="text-sm">自动标记已读</span>
-          <button
-            class="w-12 h-7 rounded-full transition-colors {$settings.markAsReadOnView ? 'bg-white/25' : 'bg-white/10'}"
-            on:click={() => updateSetting('markAsReadOnView', !$settings.markAsReadOnView)}
-            type="button"
-          >
-            <div class="w-5 h-5 bg-white rounded-full transition-transform ml-0.5
-                        {$settings.markAsReadOnView ? 'translate-x-5' : ''}" />
-          </button>
+        <div class="setting-row">
+          <div class="setting-label">自动标记已读</div>
+          <div class="toggle" class:active={$settings.markAsReadOnView} on:click={() => updateSetting('markAsReadOnView', !$settings.markAsReadOnView)}>
+            <div class="toggle-thumb" class:active={$settings.markAsReadOnView} />
+          </div>
         </div>
       </div>
     </section>
 
     <!-- 数据 -->
     <section class="mb-6">
-      <h2 class="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-2">
-        <Info class="w-3.5 h-3.5" /> 数据
-      </h2>
+      <h2 class="section-title"><Info class="w-3.5 h-3.5" /> 数据</h2>
       <div class="glass-card overflow-hidden">
-        <div class="p-4 border-b border-white/5 flex justify-between">
-          <span class="text-sm">未读</span>
-          <span class="text-sm text-muted-foreground">{unreadCount}</span>
+        <div class="setting-row">
+          <div class="setting-label">未读</div>
+          <div class="setting-value">{unreadCount}</div>
         </div>
-        <div class="p-4 border-b border-white/5 flex justify-between">
-          <span class="text-sm">收藏</span>
-          <span class="text-sm text-muted-foreground">{bookmarkCount}</span>
+        <div class="setting-row">
+          <div class="setting-label">收藏</div>
+          <div class="setting-value">{bookmarkCount}</div>
         </div>
-        <button
-          on:click={markAllAsRead}
-          class="w-full p-4 flex items-center gap-3 border-b border-white/5 hover:bg-white/5 text-sm transition-colors"
-          type="button"
-        >
-          <CheckCheck class="w-4 h-4 text-muted-foreground" /> 全部标为已读
-        </button>
-        <button
-          on:click={() => showClearDialog = true}
-          class="w-full p-4 flex items-center gap-3 hover:bg-white/5 text-sm transition-colors"
-          type="button"
-        >
-          <Trash2 class="w-4 h-4 text-muted-foreground" /> 清除缓存
-        </button>
+        <div class="action-row" on:click={markAllAsRead}>
+          <CheckCheck class="w-4 h-4 text-muted-foreground" />
+          <span>全部标为已读</span>
+        </div>
+        <div class="action-row" on:click={() => showClearDialog = true}>
+          <Trash2 class="w-4 h-4 text-muted-foreground" />
+          <span>清除缓存</span>
+        </div>
       </div>
     </section>
 
-    <button
-      class="w-full py-3 rounded-xl bg-white/10 hover:bg-white/15 transition-colors text-sm flex items-center justify-center gap-2"
-      on:click={() => showResetDialog = true}
-      type="button"
-    >
+    <button class="reset-btn" on:click={() => showResetDialog = true}>
       <RotateCcw class="w-4 h-4" /> 恢复默认
     </button>
 
-    <p class="text-center text-xs text-muted-foreground/40 mt-6">DailyTech v0.4.1</p>
+    <p class="text-center text-xs text-muted-foreground/40 mt-6">DailyTech v0.5.0</p>
   </div>
 </div>
 
 <!-- 清除缓存弹窗 -->
 {#if showClearDialog}
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <div class="fixed inset-0 z-[100] flex items-center justify-center p-6 modal-backdrop fade-in" on:click={() => showClearDialog = false}>
-    <div class="glass-card w-full max-w-sm p-6 scale-in" on:click|stopPropagation>
-      <div class="flex justify-center mb-4">
-        <div class="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center">
-          <Trash2 class="w-8 h-8 text-muted-foreground" />
-        </div>
+  <div class="modal-overlay" on:click={() => showClearDialog = false}>
+    <div class="modal-box glass-card" on:click|stopPropagation>
+      <div class="modal-icon">
+        <Trash2 class="w-8 h-8 text-muted-foreground" />
       </div>
-      <div class="text-center mb-6">
-        <h3 class="text-lg font-semibold mb-2">清除缓存</h3>
-        <p class="text-sm text-muted-foreground">确定要清除缓存吗？收藏内容不会丢失。</p>
+      <div class="modal-text">
+        <h3>清除缓存</h3>
+        <p>确定要清除缓存吗？收藏内容不会丢失。</p>
       </div>
-      <div class="flex gap-3">
-        <button
-          class="flex-1 py-3 rounded-xl bg-white/10 hover:bg-white/15 transition-colors text-sm"
-          on:click={() => showClearDialog = false}
-          type="button"
-        >
-          取消
-        </button>
-        <button
-          class="flex-1 py-3 rounded-xl bg-white/20 hover:bg-white/25 transition-colors text-sm font-medium"
-          on:click={clearCache}
-          type="button"
-        >
-          确定
-        </button>
+      <div class="modal-actions">
+        <button class="secondary-btn" on:click={() => showClearDialog = false}>取消</button>
+        <button class="primary-btn" on:click={clearCache}>确定</button>
       </div>
     </div>
   </div>
@@ -234,43 +166,257 @@
 
 <!-- 恢复默认弹窗 -->
 {#if showResetDialog}
-  <!-- svelte-ignore a11y-click-events-have-key-events -->
-  <!-- svelte-ignore a11y-no-static-element-interactions -->
-  <div class="fixed inset-0 z-[100] flex items-center justify-center p-6 modal-backdrop fade-in" on:click={() => showResetDialog = false}>
-    <div class="glass-card w-full max-w-sm p-6 scale-in" on:click|stopPropagation>
-      <div class="flex justify-center mb-4">
-        <div class="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center">
-          <RotateCcw class="w-8 h-8 text-muted-foreground" />
-        </div>
+  <div class="modal-overlay" on:click={() => showResetDialog = false}>
+    <div class="modal-box glass-card" on:click|stopPropagation>
+      <div class="modal-icon">
+        <RotateCcw class="w-8 h-8 text-muted-foreground" />
       </div>
-      <div class="text-center mb-6">
-        <h3 class="text-lg font-semibold mb-2">恢复默认设置</h3>
-        <p class="text-sm text-muted-foreground">确定要恢复所有设置为默认值吗？</p>
+      <div class="modal-text">
+        <h3>恢复默认设置</h3>
+        <p>确定要恢复所有设置为默认值吗？</p>
       </div>
-      <div class="flex gap-3">
-        <button
-          class="flex-1 py-3 rounded-xl bg-white/10 hover:bg-white/15 transition-colors text-sm"
-          on:click={() => showResetDialog = false}
-          type="button"
-        >
-          取消
-        </button>
-        <button
-          class="flex-1 py-3 rounded-xl bg-white/20 hover:bg-white/25 transition-colors text-sm font-medium"
-          on:click={() => { resetSettings(); showResetDialog = false; }}
-          type="button"
-        >
-          确定
-        </button>
+      <div class="modal-actions">
+        <button class="secondary-btn" on:click={() => showResetDialog = false}>取消</button>
+        <button class="primary-btn" on:click={() => { resetSettings(); showResetDialog = false; }}>确定</button>
       </div>
     </div>
   </div>
 {/if}
 
 <style>
-  .modal-backdrop {
+  .section-title {
+    font-size: 12px;
+    font-weight: 500;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .setting-row {
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  }
+
+  .setting-label {
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .setting-desc {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.4);
+    margin-top: 2px;
+  }
+
+  .setting-value {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .input-label {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.4);
+    margin-bottom: 4px;
+    display: block;
+  }
+
+  .input-field {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: white;
+    font-size: 14px;
+    outline: none;
+  }
+  .input-field:focus {
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  .toggle {
+    width: 48px;
+    height: 28px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 2px;
+    cursor: pointer;
+    transition: background 0.2s;
+    flex-shrink: 0;
+  }
+  .toggle.active {
+    background: rgba(255, 255, 255, 0.25);
+  }
+  .toggle:active {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  .toggle-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 12px;
+    background: white;
+    transition: transform 0.2s;
+  }
+  .toggle-thumb.active {
+    transform: translateX(20px);
+  }
+
+  .option-btn {
+    flex: 1;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(255, 255, 255, 0.05);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 12px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .option-btn.active {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+  }
+  .option-btn:active {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  .action-row {
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .action-row:active {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .reset-btn {
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    transition: background 0.2s;
+  }
+  .reset-btn:active {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  /* 弹窗 */
+  .modal-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
     background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  .modal-box {
+    width: 100%;
+    max-width: 384px;
+    padding: 24px;
+    animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .modal-icon {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 16px;
+  }
+  .modal-icon > :global(div) {
+    width: 64px;
+    height: 64px;
+    border-radius: 16px;
+    background: rgba(255, 255, 255, 0.05);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .modal-text {
+    text-align: center;
+    margin-bottom: 24px;
+  }
+  .modal-text h3 {
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .modal-text p {
+    font-size: 14px;
+    color: rgba(255, 255, 255, 0.5);
+  }
+
+  .modal-actions {
+    display: flex;
+    gap: 12px;
+  }
+
+  .primary-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.15);
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .primary-btn:active {
+    background: rgba(255, 255, 255, 0.25);
+  }
+
+  .secondary-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    color: white;
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .secondary-btn:active {
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
   }
 </style>

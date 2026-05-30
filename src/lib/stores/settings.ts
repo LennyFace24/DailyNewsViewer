@@ -5,7 +5,6 @@ const SETTINGS_KEY = 'dailytech_settings';
 
 const defaultSettings: AppSettings = {
   theme: 'dark',
-  fontSize: 'medium',
   cardStyle: 'comfortable',
   showImages: true,
   markAsReadOnView: true,
