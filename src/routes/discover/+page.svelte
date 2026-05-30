@@ -22,7 +22,7 @@
   $: customSources = $allSources.filter(s => !s.category || s.category === ContentTag.GENERAL);
 
   function isEnabled(id: string) {
-    return enabledIds.has(id);
+    return enabledIds.includes(id);
   }
 
   function handleAdd() {
