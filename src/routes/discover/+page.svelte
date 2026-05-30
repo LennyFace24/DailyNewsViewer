@@ -79,9 +79,10 @@
         <h2 class="section-title">自定义</h2>
         <div class="space-y-2">
           {#each customSources as source}
+            {@const on = isEnabled(source.id)}
             <div class="glass-card p-4 flex items-center gap-3">
-              <div class="toggle" class:active={isEnabled(source.id)} on:click={() => toggleSource(source.id)}>
-                <div class="toggle-thumb" class:active={isEnabled(source.id)} />
+              <div class="toggle" class:on={on} on:click={() => toggleSource(source.id)}>
+                <div class="knob" class:on={on} />
               </div>
               <div class="flex-1 min-w-0">
                 <div class="font-medium text-sm truncate">{source.name}</div>
@@ -101,9 +102,10 @@
       <h2 class="section-title">预设源</h2>
       <div class="space-y-2">
         {#each $allSources.filter(s => s.category && s.category !== ContentTag.GENERAL) as source}
+          {@const on = isEnabled(source.id)}
           <div class="glass-card p-4 flex items-center gap-3">
-            <div class="toggle" class:active={isEnabled(source.id)} on:click={() => toggleSource(source.id)}>
-              <div class="toggle-thumb" class:active={isEnabled(source.id)} />
+            <div class="toggle" class:on={on} on:click={() => toggleSource(source.id)}>
+              <div class="knob" class:on={on} />
             </div>
             <div class="flex-1 min-w-0">
               <div class="font-medium text-sm">{source.name}</div>
@@ -127,7 +129,7 @@
 {#if deleteTarget}
   <div class="modal-overlay" on:click={() => deleteTarget = null}>
     <div class="modal-box glass-card" on:click|stopPropagation>
-      <div class="modal-icon">
+      <div class="modal-icon-box">
         <Trash2 class="w-8 h-8 text-muted-foreground" />
       </div>
       <div class="modal-text">
@@ -143,7 +145,6 @@
 {/if}
 
 <style>
-  /* 基础按钮样式 */
   .icon-btn {
     width: 40px;
     height: 40px;
@@ -155,7 +156,6 @@
     border: none;
     color: white;
     cursor: pointer;
-    transition: background 0.2s;
   }
   .icon-btn:active {
     background: rgba(255, 255, 255, 0.15);
@@ -165,13 +165,11 @@
     width: 32px;
     height: 32px;
     border-radius: 8px;
-    background: transparent;
     display: flex;
     align-items: center;
     justify-content: center;
     color: rgba(255, 255, 255, 0.4);
     cursor: pointer;
-    transition: all 0.2s;
   }
   .icon-btn-danger:active {
     background: rgba(255, 255, 255, 0.1);
@@ -188,7 +186,6 @@
     font-weight: 500;
     border: none;
     cursor: pointer;
-    transition: background 0.2s;
   }
   .primary-btn:active {
     background: rgba(255, 255, 255, 0.25);
@@ -203,7 +200,6 @@
     font-size: 14px;
     border: none;
     cursor: pointer;
-    transition: background 0.2s;
   }
   .secondary-btn:active {
     background: rgba(255, 255, 255, 0.15);
@@ -218,7 +214,6 @@
     color: white;
     font-size: 14px;
     outline: none;
-    transition: border-color 0.2s;
   }
   .input-field:focus {
     border-color: rgba(255, 255, 255, 0.2);
@@ -241,25 +236,27 @@
     background: rgba(255, 255, 255, 0.1);
     padding: 2px;
     cursor: pointer;
-    transition: background 0.2s;
     flex-shrink: 0;
+    position: relative;
   }
-  .toggle.active {
+  .toggle.on {
     background: rgba(255, 255, 255, 0.25);
   }
   .toggle:active {
     background: rgba(255, 255, 255, 0.2);
   }
 
-  .toggle-thumb {
+  .knob {
     width: 24px;
     height: 24px;
     border-radius: 12px;
     background: white;
-    transition: transform 0.2s;
-    margin-left: 0;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: transform 0.2s ease;
   }
-  .toggle-thumb.active {
+  .knob.on {
     transform: translateX(20px);
   }
 
@@ -287,29 +284,18 @@
     background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    animation: fadeIn 0.2s ease-out;
   }
 
   .modal-box {
     width: 100%;
     max-width: 384px;
     padding: 24px;
-    animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .modal-icon {
+  .modal-icon-box {
     display: flex;
     justify-content: center;
     margin-bottom: 16px;
-  }
-  .modal-icon > div {
-    width: 64px;
-    height: 64px;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.05);
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
 
   .modal-text {
@@ -329,15 +315,5 @@
   .modal-actions {
     display: flex;
     gap: 12px;
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
-  @keyframes scaleIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
   }
 </style>
