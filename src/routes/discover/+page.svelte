@@ -80,15 +80,9 @@
         <div class="space-y-2">
           {#each customSources as source}
             <div class="glass-card p-4 flex items-center gap-3">
-              <div
-                class="toggle-switch"
-                class:active={isEnabled(source.id)}
-                on:click={() => toggleSource(source.id)}
-                role="switch"
-                aria-checked={isEnabled(source.id)}
-                tabindex="0"
-              >
-                <div class="toggle-knob" />
+              <!-- 使用和设置页完全相同的开关实现 -->
+              <div class="toggle" class:active={isEnabled(source.id)} on:click={() => toggleSource(source.id)}>
+                <div class="toggle-thumb" class:active={isEnabled(source.id)} />
               </div>
               <div class="flex-1 min-w-0">
                 <div class="font-medium text-sm truncate">{source.name}</div>
@@ -109,15 +103,9 @@
       <div class="space-y-2">
         {#each $allSources.filter(s => s.category && s.category !== ContentTag.GENERAL) as source}
           <div class="glass-card p-4 flex items-center gap-3">
-            <div
-              class="toggle-switch"
-              class:active={isEnabled(source.id)}
-              on:click={() => toggleSource(source.id)}
-              role="switch"
-              aria-checked={isEnabled(source.id)}
-              tabindex="0"
-            >
-              <div class="toggle-knob" />
+            <!-- 使用和设置页完全相同的开关实现 -->
+            <div class="toggle" class:active={isEnabled(source.id)} on:click={() => toggleSource(source.id)}>
+              <div class="toggle-thumb" class:active={isEnabled(source.id)} />
             </div>
             <div class="flex-1 min-w-0">
               <div class="font-medium text-sm">{source.name}</div>
@@ -240,32 +228,33 @@
     margin-bottom: 12px;
   }
 
-  /* 开关 - 使用 role="switch" 保证可点击 */
-  .toggle-switch {
+  /* 开关 - 和设置页完全相同 */
+  .toggle {
     width: 48px;
     height: 28px;
     border-radius: 14px;
     background: rgba(255, 255, 255, 0.1);
     padding: 2px;
     cursor: pointer;
+    transition: background 0.2s;
     flex-shrink: 0;
-    display: flex;
-    align-items: center;
   }
-  .toggle-switch.active {
+  .toggle.active {
     background: rgba(255, 255, 255, 0.25);
-    justify-content: flex-end;
   }
-  .toggle-switch:active {
+  .toggle:active {
     background: rgba(255, 255, 255, 0.2);
   }
 
-  .toggle-knob {
+  .toggle-thumb {
     width: 24px;
     height: 24px;
     border-radius: 12px;
     background: white;
-    flex-shrink: 0;
+    transition: transform 0.2s;
+  }
+  .toggle-thumb.active {
+    transform: translateX(20px);
   }
 
   .tag-badge {
