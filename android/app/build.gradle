@@ -12,9 +12,9 @@ android {
     signingConfigs {
         release {
             storeFile file('../dailytech.keystore')
-            storePassword 'dailytech123'
-            keyAlias 'dailytech'
-            keyPassword 'dailytech123'
+            storePassword System.getenv("KEYSTORE_PASSWORD") ?: 'dailytech123'
+            keyAlias System.getenv("KEY_ALIAS") ?: 'dailytech'
+            keyPassword System.getenv("KEY_PASSWORD") ?: 'dailytech123'
         }
     }
 
