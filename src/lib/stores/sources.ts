@@ -1,6 +1,6 @@
 import { writable, derived } from 'svelte/store';
 import type { SourceConfig } from '$lib/types/source';
-import { ContentCategory } from '$lib/types/source';
+import { ContentTag } from '$lib/types/source';
 import { PRESET_SOURCES } from '$lib/config/sources';
 
 const CUSTOM_KEY = 'dailytech_custom_sources';
@@ -35,7 +35,7 @@ export const enabledSources = derived(
 );
 
 function save(sources: SourceConfig[], ids: Set<string>) {
-  localStorage.setItem(CUSTOM_KEY, JSON.stringify(sources.filter(s => s.category === ContentCategory.CUSTOM)));
+  localStorage.setItem(CUSTOM_KEY, JSON.stringify(sources.filter(s => !s.category || s.category === ContentTag.GENERAL)));
   localStorage.setItem(ENABLED_KEY, JSON.stringify([...ids]));
 }
 
@@ -47,7 +47,7 @@ export function addCustomSource(name: string, url: string, description: string =
     description: description || `自定义: ${name}`,
     type: 'rss' as any,
     url,
-    category: ContentCategory.CUSTOM
+    category: ContentTag.GENERAL
   };
 
   allSources.update(sources => {

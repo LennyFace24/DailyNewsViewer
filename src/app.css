@@ -4,26 +4,21 @@
 
 @layer base {
   :root {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-    --primary: 217 91% 60%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 217 91% 60%;
-    --radius: 0.75rem;
+    --background: 0 0% 6%;
+    --foreground: 0 0% 95%;
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 95%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 95%;
+    --accent: 200 80% 55%;
+    --accent-foreground: 0 0% 100%;
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 60%;
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 200 80% 55%;
+    --destructive: 0 70% 50%;
+    --radius: 1rem;
   }
 
   * {
@@ -32,17 +27,18 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", sans-serif;
     -webkit-font-smoothing: antialiased;
-    overscroll-behavior-y: contain;
+    -moz-osx-font-smoothing: grayscale;
+    overscroll-behavior: none;
   }
 
   ::-webkit-scrollbar {
-    width: 4px;
+    width: 3px;
   }
 
   ::-webkit-scrollbar-thumb {
-    @apply bg-slate-700 rounded-full;
+    @apply bg-white/10 rounded-full;
   }
 }
 
@@ -64,14 +60,73 @@
 
   /* 毛玻璃效果 */
   .glass {
-    background: hsl(var(--background) / 0.7);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: rgba(20, 20, 20, 0.7);
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .glass-light {
+    background: rgba(30, 30, 30, 0.5);
+    backdrop-filter: blur(12px) saturate(150%);
+    -webkit-backdrop-filter: blur(12px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.06);
   }
 
   .glass-card {
-    background: hsl(var(--card) / 0.6);
+    background: rgba(25, 25, 25, 0.6);
+    backdrop-filter: blur(16px) saturate(180%);
+    -webkit-backdrop-filter: blur(16px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: var(--radius);
+  }
+
+  /* 弹窗背景 */
+  .modal-backdrop {
+    background: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);
+  }
+
+  /* 渐变点缀 */
+  .accent-glow {
+    box-shadow: 0 0 20px -5px hsl(var(--accent) / 0.3);
+  }
+
+  /* 隐藏滚动条 */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* 动画 */
+  .fade-in {
+    animation: fadeIn 0.2s ease-out;
+  }
+
+  .scale-in {
+    animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  .slide-up {
+    animation: slideUp 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes scaleIn {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
   }
 }

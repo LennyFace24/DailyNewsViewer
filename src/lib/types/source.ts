@@ -4,28 +4,38 @@ export enum SourceType {
   API = 'api'
 }
 
-/** 内容板块 */
-export enum ContentCategory {
+/** 内容分类标签（由文章内容决定，不是源决定） */
+export enum ContentTag {
   AI = 'ai',
-  GAME_DEV = 'game_dev',
-  CS_RESEARCH = 'cs_research',
   SECURITY = 'security',
-  WEB_DEV = 'web_dev',
-  OPEN_SOURCE = 'open_source',
-  TECH_NEWS = 'tech_news',
-  CUSTOM = 'custom'
+  WEB = 'web',
+  MOBILE = 'mobile',
+  GAME_DEV = 'gamedev',
+  DEVOPS = 'devops',
+  DATABASE = 'database',
+  LANGUAGES = 'languages',
+  OPEN_SOURCE = 'opensource',
+  STARTUP = 'startup',
+  CAREER = 'career',
+  RESEARCH = 'research',
+  GENERAL = 'general'
 }
 
-/** 板块显示名称 */
-export const CATEGORY_LABELS: Record<ContentCategory, string> = {
-  [ContentCategory.AI]: '🤖 AI / ML',
-  [ContentCategory.GAME_DEV]: '🎮 游戏开发',
-  [ContentCategory.CS_RESEARCH]: '📚 CS 研究',
-  [ContentCategory.SECURITY]: '🔒 安全',
-  [ContentCategory.WEB_DEV]: '🌐 Web 开发',
-  [ContentCategory.OPEN_SOURCE]: '📦 开源',
-  [ContentCategory.TECH_NEWS]: '📰 科技新闻',
-  [ContentCategory.CUSTOM]: '⭐ 自定义'
+/** 标签显示信息 */
+export const TAG_INFO: Record<ContentTag, { label: string; icon: string; keywords: string[] }> = {
+  [ContentTag.AI]: { label: 'AI / ML', icon: '🤖', keywords: ['ai', 'ml', 'machine learning', 'deep learning', 'gpt', 'llm', 'neural', 'transformer', 'openai', 'chatgpt', 'artificial intelligence', '模型', '训练', '推理'] },
+  [ContentTag.SECURITY]: { label: '安全', icon: '🔒', keywords: ['security', 'vulnerability', 'hack', 'exploit', 'malware', 'ransomware', 'cve', 'zero-day', 'encryption', 'privacy', '漏洞', '安全', '加密'] },
+  [ContentTag.WEB]: { label: 'Web', icon: '🌐', keywords: ['javascript', 'typescript', 'react', 'vue', 'angular', 'nextjs', 'nuxt', 'css', 'html', 'frontend', 'backend', 'node', 'deno', 'bun', 'web'] },
+  [ContentTag.MOBILE]: { label: '移动端', icon: '📱', keywords: ['android', 'ios', 'flutter', 'react native', 'swift', 'kotlin', 'mobile', 'app store'] },
+  [ContentTag.GAME_DEV]: { label: '游戏', icon: '🎮', keywords: ['game', 'unity', 'unreal', 'godot', 'gamedev', 'rendering', 'shader', '游戏'] },
+  [ContentTag.DEVOPS]: { label: 'DevOps', icon: '⚙️', keywords: ['docker', 'kubernetes', 'k8s', 'ci/cd', 'jenkins', 'github actions', 'terraform', 'aws', 'cloud', 'devops', '部署', '运维'] },
+  [ContentTag.DATABASE]: { label: '数据库', icon: '🗄️', keywords: ['database', 'sql', 'postgres', 'mysql', 'mongodb', 'redis', 'elasticsearch', '数据库'] },
+  [ContentTag.LANGUAGES]: { label: '编程语言', icon: '💻', keywords: ['rust', 'go', 'python', 'java', 'c++', 'swift', 'kotlin', 'programming language', 'compiler', '编程'] },
+  [ContentTag.OPEN_SOURCE]: { label: '开源', icon: '📦', keywords: ['open source', 'github', 'gitlab', 'foss', 'mit license', 'apache', '开源'] },
+  [ContentTag.STARTUP]: { label: '创业', icon: '🚀', keywords: ['startup', 'funding', 'vc', 'venture', 'seed', 'series a', 'ipo', '创业', '融资'] },
+  [ContentTag.CAREER]: { label: '职场', icon: '👔', keywords: ['career', 'job', 'interview', 'salary', 'hiring', 'remote work', '职场', '面试', '招聘'] },
+  [ContentTag.RESEARCH]: { label: '学术', icon: '📚', keywords: ['paper', 'research', 'arxiv', 'conference', 'journal', 'peer review', '论文', '研究'] },
+  [ContentTag.GENERAL]: { label: '综合', icon: '📰', keywords: [] }
 };
 
 /** 数据源配置 */
@@ -35,7 +45,5 @@ export interface SourceConfig {
   description: string;
   type: SourceType;
   url: string;
-  category: ContentCategory;
-  quality?: 'high' | 'medium'; // 内容质量标记
-  fullContent?: boolean; // 是否提供完整内容
+  category?: ContentTag; // 默认分类（可选）
 }

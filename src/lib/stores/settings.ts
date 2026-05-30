@@ -1,14 +1,14 @@
 import { writable } from 'svelte/store';
 import type { AppSettings } from '$lib/types/settings';
-import { THEME_COLORS, PROXY_PRESETS } from '$lib/types/settings';
+import { THEME_COLORS } from '$lib/types/settings';
 
-export { THEME_COLORS, PROXY_PRESETS };
+export { THEME_COLORS };
 
 const SETTINGS_KEY = 'dailytech_settings';
 
 const defaultSettings: AppSettings = {
   theme: 'dark',
-  primaryColor: '217 91% 60%',
+  primaryColor: '200 80% 55%',
   backgroundImage: undefined,
   backgroundBlur: true,
   fontSize: 'medium',
@@ -16,15 +16,15 @@ const defaultSettings: AppSettings = {
   showImages: true,
   markAsReadOnView: true,
   proxyEnabled: false,
-  proxyUrl: 'https://api.allorigins.win/raw?url='
+  proxyHost: '127.0.0.1',
+  proxyPort: '7890',
+  proxyType: 'http'
 };
 
 function loadSettings(): AppSettings {
   try {
     const data = localStorage.getItem(SETTINGS_KEY);
-    if (data) {
-      return { ...defaultSettings, ...JSON.parse(data) };
-    }
+    if (data) return { ...defaultSettings, ...JSON.parse(data) };
   } catch {}
   return defaultSettings;
 }
@@ -38,10 +38,7 @@ settings.subscribe(value => {
   } catch {}
 });
 
-export function updateSetting<K extends keyof AppSettings>(
-  key: K,
-  value: AppSettings[K]
-): void {
+export function updateSetting<K extends keyof AppSettings>(key: K, value: AppSettings[K]): void {
   settings.update(s => ({ ...s, [key]: value }));
 }
 
@@ -51,6 +48,5 @@ export function resetSettings(): void {
 
 function applyTheme(s: AppSettings) {
   const root = document.documentElement;
-  root.style.setProperty('--primary', s.primaryColor);
-  root.style.setProperty('--ring', s.primaryColor);
+  root.style.setProperty('--accent', s.primaryColor);
 }

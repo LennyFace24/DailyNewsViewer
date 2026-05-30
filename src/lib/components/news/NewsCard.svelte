@@ -1,10 +1,9 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
   import { Bookmark, BookmarkCheck, Clock, User } from 'lucide-svelte';
-  import * as Card from '$lib/components/ui/card/index.js';
-  import { Badge } from '$lib/components/ui/badge/index.js';
-  import { Button } from '$lib/components/ui/button/index.js';
   import type { Article } from '$lib/types/news';
+  import { ContentTag, TAG_INFO } from '$lib/types/source';
+  import { classifyArticle } from '$lib/services/classifier';
   import { formatRelativeTime } from '$lib/utils/date';
   import { truncateText } from '$lib/utils/text';
   import { toggleBookmark } from '$lib/stores/articles';
@@ -18,6 +17,7 @@
 
   $: isCompact = $settings.cardStyle === 'compact';
   $: isSpacious = $settings.cardStyle === 'spacious';
+  $: tag = classifyArticle(article);
 
   function handleClick() {
     goto(`/article/${encodeURIComponent(article.id)}`);
@@ -29,16 +29,13 @@
   }
 </script>
 
-<article
-  on:click={handleClick}
-  class="masonry-item group cursor-pointer"
->
-  <Card.Root class="overflow-hidden transition-all duration-200 hover:shadow-lg active:scale-[0.98] {article.isRead ? 'opacity-70' : ''}">
+<article on:click={handleClick} class="masonry-item group cursor-pointer">
+  <div class="glass-card overflow-hidden transition-all duration-200 hover:border-white/15 active:scale-[0.98] {article.isRead ? 'opacity-60' : ''}">
     <!-- 图片区 -->
     {#if article.thumbnail && $settings.showImages && !imageError}
       <div class="relative overflow-hidden {isCompact ? 'h-32' : isSpacious ? 'h-56' : 'h-44'}">
         {#if !imageLoaded}
-          <div class="absolute inset-0 bg-muted animate-pulse" />
+          <div class="absolute inset-0 bg-white/5 animate-pulse" />
         {/if}
         <img
           src={article.thumbnail}
@@ -48,34 +45,38 @@
           on:error={() => imageError = true}
           class="w-full h-full object-cover {imageLoaded ? '' : 'opacity-0'}"
         />
-        <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+        <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
 
+        <!-- 标签 -->
         <div class="absolute top-3 left-3">
-          <Badge variant="secondary" class="bg-black/50 text-white border-0 text-xs">
-            {article.sourceName}
-          </Badge>
+          <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-black/40 backdrop-blur-md border border-white/10">
+            {TAG_INFO[tag].icon} {TAG_INFO[tag].label}
+          </span>
         </div>
 
+        <!-- 收藏 -->
         <button
-          class="absolute top-3 right-3 p-1.5 rounded-full bg-black/50 text-white hover:bg-black/70"
+          class="absolute top-3 right-3 p-1.5 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white hover:bg-black/60 transition-colors"
           on:click={handleBookmark}
         >
           {#if article.isBookmarked}
-            <BookmarkCheck class="h-4 w-4 text-primary" />
+            <BookmarkCheck class="w-4 h-4 text-accent" />
           {:else}
-            <Bookmark class="h-4 w-4" />
+            <Bookmark class="w-4 h-4" />
           {/if}
         </button>
       </div>
     {/if}
 
-    <Card.Content class="{isCompact ? 'p-3' : isSpacious ? 'p-5' : 'p-4'}">
+    <div class="p-4 {isCompact ? 'p-3' : isSpacious ? 'p-5' : 'p-4'}">
       {#if !article.thumbnail || !$settings.showImages || imageError}
         <div class="flex items-center justify-between mb-3">
-          <Badge variant="secondary" class="text-xs">{article.sourceName}</Badge>
-          <button class="p-1" on:click={handleBookmark}>
+          <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-white/5 border border-white/10">
+            {TAG_INFO[tag].icon} {TAG_INFO[tag].label}
+          </span>
+          <button class="p-1 rounded-full hover:bg-white/5 transition-colors" on:click={handleBookmark}>
             {#if article.isBookmarked}
-              <BookmarkCheck class="h-4 w-4 text-primary" />
+              <BookmarkCheck class="h-4 w-4 text-accent" />
             {:else}
               <Bookmark class="h-4 w-4 text-muted-foreground" />
             {/if}
@@ -105,9 +106,9 @@
           </span>
         </div>
         {#if article.isRead}
-          <Badge variant="outline" class="text-[10px] py-0">已读</Badge>
+          <span class="text-xs text-muted-foreground/50">已读</span>
         {/if}
       </div>
-    </Card.Content>
-  </Card.Root>
+    </div>
+  </div>
 </article>
