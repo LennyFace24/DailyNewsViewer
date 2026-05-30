@@ -5,8 +5,9 @@
   import NewsList from '$lib/components/news/NewsList.svelte';
   import EmptyState from '$lib/components/shared/EmptyState.svelte';
   import {
-    articles, filteredArticles,
-    addArticles, saveToCache, loadFromCache
+    articles, filteredArticles, displayedArticles,
+    isLoading, addArticlesToPool, saveToCache, loadFromCache,
+    refreshArticles, loadMoreArticles
   } from '$lib/stores/articles';
   import { enabledSources } from '$lib/stores/sources';
   import { fetchMultipleSources } from '$lib/services/rss';
@@ -14,7 +15,7 @@
   import { classifyArticle } from '$lib/services/classifier';
   import { ContentTag, TAG_INFO } from '$lib/types/source';
 
-  const TOTAL_LIMIT = 60;
+  const TOTAL_LIMIT = 100; // 每个源拉取更多内容
 
   let selectedTag: ContentTag | null = null;
   let isRefreshing = false;
@@ -29,7 +30,6 @@
   let cachedArticles: typeof $filteredArticles = [];
   let cachedTags: typeof $filteredArticles = [];
 
-  // 只在文章列表变化时重新分类
   $: if ($filteredArticles !== cachedArticles) {
     cachedArticles = $filteredArticles;
     cachedTags = $filteredArticles.map(a => ({
@@ -52,7 +52,7 @@
   let cachedGroups: any[] = [];
 
   $: {
-    const key = `${selectedTag}-${displayArticles.length}`;
+    const key = `${selectedTag}-${displayArticles.length}-${displayArticles[0]?.id}`;
     if (key !== lastDisplayKey) {
       lastDisplayKey = key;
       const groups = new Map<string, typeof displayArticles>();
@@ -79,20 +79,27 @@
     return `${d.getMonth() + 1}月${d.getDate()}日`;
   }
 
-  async function refreshAll() {
+  async function fetchAllSources() {
+    const results = await fetchMultipleSources($enabledSources, TOTAL_LIMIT);
+    let newArticles = Array.from(results.values()).flat();
+
+    if ($enabledSources.some(s => s.id === 'hackernews')) {
+      const hn = await fetchHackerNewsTopStories(30);
+      newArticles.push(...hn);
+    }
+
+    addArticlesToPool(newArticles);
+    saveToCache();
+  }
+
+  async function handleRefresh() {
     if (isRefreshing) return;
     isRefreshing = true;
     try {
-      const results = await fetchMultipleSources($enabledSources, TOTAL_LIMIT);
-      let newArticles = Array.from(results.values()).flat();
-
-      if ($enabledSources.some(s => s.id === 'hackernews')) {
-        const hn = await fetchHackerNewsTopStories(15);
-        newArticles.push(...hn);
-      }
-
-      addArticles(newArticles);
-      saveToCache();
+      // 先拉取新内容
+      await fetchAllSources();
+      // 然后刷新显示
+      refreshArticles();
     } catch (error) {
       console.error('Refresh failed:', error);
     } finally {
@@ -100,9 +107,21 @@
     }
   }
 
-  onMount(() => {
+  function handleLoadMore() {
+    loadMoreArticles();
+  }
+
+  onMount(async () => {
     loadFromCache();
-    if ($articles.length === 0) refreshAll();
+    if ($articles.length === 0) {
+      isRefreshing = true;
+      try {
+        await fetchAllSources();
+        refreshArticles();
+      } finally {
+        isRefreshing = false;
+      }
+    }
   });
 </script>
 
@@ -133,7 +152,7 @@
 
   <!-- 内容区 -->
   <div class="px-4 py-4">
-    {#if isRefreshing && $articles.length === 0}
+    {#if isRefreshing && $displayedArticles.length === 0}
       <div class="space-y-4">
         {#each Array(3) as _}
           <div class="space-y-3">
@@ -148,11 +167,19 @@
         title="暂无内容"
         description="下拉刷新获取最新资讯"
         actionLabel="刷新"
-        onAction={refreshAll}
+        onAction={handleRefresh}
       />
     {:else}
       <NewsList groups={cachedGroups} />
-      <div class="text-center py-6 text-xs text-muted-foreground/60">
+
+      <!-- 加载更多按钮 -->
+      <div class="flex justify-center py-6">
+        <button class="load-more-btn" on:click={handleLoadMore}>
+          加载更多
+        </button>
+      </div>
+
+      <div class="text-center py-2 text-xs text-muted-foreground/40">
         <p>共 {displayArticles.length} 条</p>
       </div>
     {/if}
@@ -161,7 +188,7 @@
   <!-- 浮动刷新按钮 -->
   <button
     class="refresh-btn fixed bottom-20 right-4 z-50 w-12 h-12 rounded-full glass flex items-center justify-center"
-    on:click={refreshAll}
+    on:click={handleRefresh}
     disabled={isRefreshing}
   >
     <RefreshCw class="w-5 h-5 {isRefreshing ? 'animate-spin' : ''}" />
@@ -190,5 +217,20 @@
   .refresh-btn:active {
     transform: scale(0.95);
     background: rgba(255, 255, 255, 0.15);
+  }
+
+  .load-more-btn {
+    padding: 10px 32px;
+    border-radius: 100px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .load-more-btn:active {
+    background: rgba(255, 255, 255, 0.15);
+    transform: scale(0.98);
   }
 </style>
