@@ -18,12 +18,7 @@
   let newDesc = '';
   let deleteTarget: string | null = null;
 
-  $: enabledIds = $enabledSourceIds;
   $: customSources = $allSources.filter(s => !s.category || s.category === ContentTag.GENERAL);
-
-  function isEnabled(id: string) {
-    return enabledIds.includes(id);
-  }
 
   function handleAdd() {
     if (newName && newUrl) {
@@ -80,9 +75,12 @@
         <div class="space-y-2">
           {#each customSources as source}
             <div class="glass-card p-4 flex items-center gap-3">
-              <!-- 使用和设置页完全相同的开关实现 -->
-              <div class="toggle" class:active={isEnabled(source.id)} on:click={() => toggleSource(source.id)}>
-                <div class="toggle-thumb" class:active={isEnabled(source.id)} />
+              <div
+                class="toggle"
+                class:active={$enabledSourceIds.includes(source.id)}
+                on:click={() => toggleSource(source.id)}
+              >
+                <div class="toggle-thumb" class:active={$enabledSourceIds.includes(source.id)} />
               </div>
               <div class="flex-1 min-w-0">
                 <div class="font-medium text-sm truncate">{source.name}</div>
@@ -103,9 +101,12 @@
       <div class="space-y-2">
         {#each $allSources.filter(s => s.category && s.category !== ContentTag.GENERAL) as source}
           <div class="glass-card p-4 flex items-center gap-3">
-            <!-- 使用和设置页完全相同的开关实现 -->
-            <div class="toggle" class:active={isEnabled(source.id)} on:click={() => toggleSource(source.id)}>
-              <div class="toggle-thumb" class:active={isEnabled(source.id)} />
+            <div
+              class="toggle"
+              class:active={$enabledSourceIds.includes(source.id)}
+              on:click={() => toggleSource(source.id)}
+            >
+              <div class="toggle-thumb" class:active={$enabledSourceIds.includes(source.id)} />
             </div>
             <div class="flex-1 min-w-0">
               <div class="font-medium text-sm">{source.name}</div>
@@ -228,7 +229,7 @@
     margin-bottom: 12px;
   }
 
-  /* 开关 - 和设置页完全相同 */
+  /* 开关 */
   .toggle {
     width: 48px;
     height: 28px;
