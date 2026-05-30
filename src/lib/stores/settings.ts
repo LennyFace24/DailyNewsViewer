@@ -1,16 +1,10 @@
 import { writable } from 'svelte/store';
 import type { AppSettings } from '$lib/types/settings';
-import { THEME_COLORS } from '$lib/types/settings';
-
-export { THEME_COLORS };
 
 const SETTINGS_KEY = 'dailytech_settings';
 
 const defaultSettings: AppSettings = {
   theme: 'dark',
-  primaryColor: '200 80% 55%',
-  backgroundImage: undefined,
-  backgroundBlur: true,
   fontSize: 'medium',
   cardStyle: 'comfortable',
   showImages: true,
@@ -34,7 +28,6 @@ export const settings = writable<AppSettings>(loadSettings());
 settings.subscribe(value => {
   try {
     localStorage.setItem(SETTINGS_KEY, JSON.stringify(value));
-    applyTheme(value);
   } catch {}
 });
 
@@ -44,9 +37,4 @@ export function updateSetting<K extends keyof AppSettings>(key: K, value: AppSet
 
 export function resetSettings(): void {
   settings.set(defaultSettings);
-}
-
-function applyTheme(s: AppSettings) {
-  const root = document.documentElement;
-  root.style.setProperty('--accent', s.primaryColor);
 }

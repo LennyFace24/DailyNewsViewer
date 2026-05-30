@@ -1,8 +1,7 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { Skeleton } from '$lib/components/ui/skeleton/index.js';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { RefreshCw } from 'lucide-svelte';
+  import { RefreshCw, Brain, Shield, Globe, Smartphone, Gamepad2, Settings, Database, Code, Package, Rocket, Briefcase, BookOpen, Newspaper } from 'lucide-svelte';
   import NewsList from '$lib/components/news/NewsList.svelte';
   import EmptyState from '$lib/components/shared/EmptyState.svelte';
   import {
@@ -10,35 +9,46 @@
     addArticles, saveToCache, loadFromCache
   } from '$lib/stores/articles';
   import { enabledSources } from '$lib/stores/sources';
-  import { fetchMultipleSources, fetchSingleSource } from '$lib/services/rss';
+  import { fetchMultipleSources } from '$lib/services/rss';
   import { fetchHackerNewsTopStories } from '$lib/services/apis';
   import { classifyArticle } from '$lib/services/classifier';
   import { ContentTag, TAG_INFO } from '$lib/types/source';
 
   const TOTAL_LIMIT = 60;
-  const SINGLE_SOURCE_LIMIT = 30;
 
   let selectedTag: ContentTag | null = null;
   let isRefreshing = false;
 
-  // 获取所有文章并按标签分组
+  const iconMap: Record<string, any> = {
+    brain: Brain,
+    shield: Shield,
+    globe: Globe,
+    smartphone: Smartphone,
+    'gamepad-2': Gamepad2,
+    settings: Settings,
+    database: Database,
+    code: Code,
+    package: Package,
+    rocket: Rocket,
+    briefcase: Briefcase,
+    'book-open': BookOpen,
+    newspaper: Newspaper
+  };
+
   $: articlesWithTags = $filteredArticles.map(a => ({
     ...a,
     contentTag: classifyArticle(a)
   }));
 
-  // 按选中标签过滤
   $: displayArticles = selectedTag
     ? articlesWithTags.filter(a => a.contentTag === selectedTag)
     : articlesWithTags;
 
-  // 获取有文章的标签
   $: availableTags = (() => {
     const tags = new Set(articlesWithTags.map(a => a.contentTag));
     return Object.values(ContentTag).filter(t => tags.has(t));
   })();
 
-  // 按日期分组
   $: displayGroups = (() => {
     const groups = new Map<string, typeof displayArticles>();
     for (const article of displayArticles) {
@@ -96,19 +106,21 @@
     <div class="px-4 py-3">
       <div class="flex gap-2 overflow-x-auto scrollbar-hide">
         <button
-          class="shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all
-                 {selectedTag === null ? 'bg-white/10 text-foreground' : 'text-muted-foreground hover:text-foreground'}"
+          class="shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors
+                 {selectedTag === null ? 'bg-white/15 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-white/5'}"
           on:click={() => selectedTag = null}
         >
           全部
         </button>
         {#each availableTags as tag}
+          {@const Icon = iconMap[TAG_INFO[tag].icon] || Newspaper}
           <button
-            class="shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-all
-                   {selectedTag === tag ? 'bg-white/10 text-foreground' : 'text-muted-foreground hover:text-foreground'}"
+            class="shrink-0 px-4 py-1.5 rounded-full text-sm font-medium transition-colors flex items-center gap-1.5
+                   {selectedTag === tag ? 'bg-white/15 text-foreground' : 'text-muted-foreground hover:text-foreground hover:bg-white/5'}"
             on:click={() => selectedTag = tag}
           >
-            {TAG_INFO[tag].icon} {TAG_INFO[tag].label}
+            <Icon class="w-3.5 h-3.5" />
+            {TAG_INFO[tag].label}
           </button>
         {/each}
       </div>
@@ -144,7 +156,7 @@
 
   <!-- 浮动刷新按钮 -->
   <button
-    class="fixed bottom-20 right-4 z-50 w-12 h-12 rounded-full glass accent-glow flex items-center justify-center transition-transform active:scale-95"
+    class="fixed bottom-20 right-4 z-50 w-12 h-12 rounded-full glass flex items-center justify-center transition-all active:scale-95 hover:bg-white/10"
     on:click={refreshAll}
     disabled={isRefreshing}
   >
