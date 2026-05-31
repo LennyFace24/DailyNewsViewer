@@ -35,7 +35,7 @@
     "@capacitor/preferences": "^5.0.0",
     "bits-ui": "^0.21.0",
     "clsx": "^2.1.0",
-    "date-fns": "^3.0.0",
+    "date-fns": "^4.4.0",
     "lucide-svelte": "^0.300.0",
     "radix-svelte": "^0.9.0",
     "rss-parser": "^3.13.0",
