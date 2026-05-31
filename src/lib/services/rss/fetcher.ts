@@ -11,23 +11,12 @@ const DEFAULT_PROXIES = [
   'https://api.codetabs.com/v1/proxy?quest='
 ];
 
-/** 获取当前代理列表 */
-function getProxies(): string[] {
-  const s = get(settings);
-  if (s.proxyEnabled && s.proxyUrl) {
-    return [s.proxyUrl, ...DEFAULT_PROXIES.filter(p => p !== s.proxyUrl)];
-  }
-  return DEFAULT_PROXIES;
-}
-
 /** 获取RSS源内容 */
 export async function fetchRSSFeed(
   source: SourceConfig,
   limit: number = 20
 ): Promise<Article[]> {
-  const proxies = getProxies();
-
-  for (const proxy of proxies) {
+  for (const proxy of DEFAULT_PROXIES) {
     try {
       const articles = await fetchWithProxy(source, proxy, limit);
       if (articles.length > 0) {
