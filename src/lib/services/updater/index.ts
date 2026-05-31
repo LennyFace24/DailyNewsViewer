@@ -16,8 +16,10 @@ export interface ReleaseInfo {
 
 /** 获取当前版本 */
 export function getCurrentVersion(): string {
-  // 从构建时注入的版本号获取，或者使用默认值
-  return import.meta.env.VITE_APP_VERSION || '0.7.1';
+  // 从构建时注入的版本号获取
+  const version = import.meta.env.VITE_APP_VERSION || '0.0.0';
+  console.log('[Updater] Current version:', version);
+  return version;
 }
 
 /** 比较版本号 */

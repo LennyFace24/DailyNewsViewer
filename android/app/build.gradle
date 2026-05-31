@@ -1,5 +1,12 @@
 apply plugin: 'com.android.application'
 
+// 从 package.json 读取版本号
+def packageJsonText = file('../../package.json').text
+def versionMatch = (packageJsonText =~ /"version"\s*:\s*"([^"]+)"/)
+def appVersionName = versionMatch[0][1]
+def versionParts = appVersionName.tokenize('.')
+def appVersionCode = (versionParts[0].toInteger() * 10000) + (versionParts[1].toInteger() * 100) + (versionParts.size() > 2 ? versionParts[2].toInteger() : 0)
+
 android {
     namespace "com.dailytech.app"
     compileSdkVersion rootProject.ext.compileSdkVersion
@@ -22,8 +29,8 @@ android {
         applicationId "com.dailytech.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode appVersionCode
+        versionName appVersionName
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.

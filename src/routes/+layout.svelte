@@ -33,12 +33,18 @@
   async function checkUpdate() {
     try {
       const release = await checkForUpdate();
-      if (!release) return;
+      if (!release) {
+        console.log('[Update] No release info');
+        return;
+      }
 
       const currentVersion = getCurrentVersion();
-      const hasUpdate = compareVersions(currentVersion, release.version) > 0;
+      const comparison = compareVersions(currentVersion, release.version);
 
-      if (hasUpdate) {
+      console.log('[Update] Current:', currentVersion, 'Latest:', release.version, 'Comparison:', comparison);
+
+      // comparison > 0 表示有更新
+      if (comparison > 0) {
         latestRelease = release;
         showUpdateDialog = true;
       }
