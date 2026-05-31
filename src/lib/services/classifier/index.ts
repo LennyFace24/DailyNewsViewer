@@ -1,84 +1,43 @@
 import { ContentTag, TAG_INFO } from '$lib/types/source';
 import type { Article } from '$lib/types/news';
+import type { SourceConfig } from '$lib/types/source';
+import { PRESET_SOURCES } from '$lib/config/sources';
 
-/** 分类缓存 */
-const classificationCache = new Map<string, ContentTag>();
+/** 源分类缓存 */
+const sourceCategoryMap = new Map<string, ContentTag>();
 
-/** 改进的分类算法 - 使用缓存和词边界匹配 */
-export function classifyArticle(article: Article): ContentTag {
-  // 检查缓存
-  const cached = classificationCache.get(article.id);
-  if (cached) return cached;
-
-  const text = `${article.title} ${article.summary}`.toLowerCase();
-  const words = text.split(/[\s,.\-_:;!?()[\]{}'"\/\\]+/).filter(w => w.length > 1);
-
-  const scores: Record<ContentTag, number> = {} as any;
-
-  for (const [tag, info] of Object.entries(TAG_INFO)) {
-    if (tag === ContentTag.GENERAL) continue;
-
-    let score = 0;
-
-    for (const keyword of info.keywords) {
-      const kw = keyword.toLowerCase();
-
-      // 精确匹配标题中的关键词（权重最高）
-      if (article.title.toLowerCase().includes(kw)) {
-        score += kw.length * 3;
-        continue;
-      }
-
-      // 词边界匹配（避免部分匹配）
-      if (words.some(w => w === kw)) {
-        score += kw.length * 2;
-        continue;
-      }
-
-      // 包含匹配（权重较低）
-      if (text.includes(kw)) {
-        if (!isFalsePositive(kw, text, tag as ContentTag)) {
-          score += kw.length;
-        }
-      }
+// 初始化源分类映射
+function initSourceMap() {
+  for (const source of PRESET_SOURCES) {
+    if (source.category) {
+      sourceCategoryMap.set(source.id, source.category);
     }
-
-    scores[tag as ContentTag] = score;
   }
+}
+initSourceMap();
 
-  const bestTag = Object.entries(scores)
-    .sort(([, a], [, b]) => b - a)
-    .find(([, score]) => score > 5);
-
-  const result = bestTag ? (bestTag[0] as ContentTag) : ContentTag.GENERAL;
-
-  // 缓存结果
-  classificationCache.set(article.id, result);
-
-  return result;
+/** 添加自定义源的分类 */
+export function setSourceCategory(sourceId: string, category: ContentTag): void {
+  sourceCategoryMap.set(sourceId, category);
 }
 
-/** 误匹配检测 */
-function isFalsePositive(keyword: string, text: string, tag: ContentTag): boolean {
-  if (keyword === 'web' && (text.includes('car') || text.includes('汽车') || text.includes('auto'))) {
-    return true;
-  }
-  if (keyword === 'go' && !text.includes('golang') && !text.includes('go语言')) {
-    return true;
-  }
-  if (keyword === 'rust' && !text.includes('rust语言') && !text.includes('rust-lang')) {
-    return true;
-  }
-  return false;
+/** 根据源获取文章分类（不是根据文章内容） */
+export function getArticleCategory(article: Article): ContentTag {
+  // 直接从源的分类获取
+  return sourceCategoryMap.get(article.sourceId) || ContentTag.GENERAL;
 }
 
-/** 清除缓存（文章更新时调用） */
-export function clearClassificationCache(): void {
-  classificationCache.clear();
+/** 获取所有可用的分类（有文章的分类） */
+export function getAvailableCategories(articles: Article[]): ContentTag[] {
+  const categories = new Set<ContentTag>();
+  for (const article of articles) {
+    categories.add(getArticleCategory(article));
+  }
+  return Array.from(categories).sort();
 }
 
-/** 为文章列表批量分类 */
-export function classifyArticles(articles: Article[]): Map<ContentTag, Article[]> {
+/** 按分类分组文章 */
+export function groupArticlesByCategory(articles: Article[]): Map<ContentTag, Article[]> {
   const groups = new Map<ContentTag, Article[]>();
 
   for (const tag of Object.values(ContentTag)) {
@@ -86,10 +45,11 @@ export function classifyArticles(articles: Article[]): Map<ContentTag, Article[]
   }
 
   for (const article of articles) {
-    const tag = classifyArticle(article);
+    const tag = getArticleCategory(article);
     groups.get(tag)!.push(article);
   }
 
+  // 移除空分类
   for (const [tag, articles] of groups) {
     if (articles.length === 0) {
       groups.delete(tag);

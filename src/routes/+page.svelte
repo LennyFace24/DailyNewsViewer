@@ -6,18 +6,17 @@
   import EmptyState from '$lib/components/shared/EmptyState.svelte';
   import {
     articles, filteredArticles, displayedArticles,
-    isLoading, addArticlesToPool, saveToCache, loadFromCache,
+    addArticlesToPool, saveToCache, loadFromCache,
     refreshArticles, loadMoreArticles
   } from '$lib/stores/articles';
   import { enabledSources } from '$lib/stores/sources';
   import { selectedTag } from '$lib/stores/ui';
   import { fetchMultipleSources } from '$lib/services/rss';
   import { fetchHackerNewsTopStories } from '$lib/services/apis';
-  import { classifyArticle } from '$lib/services/classifier';
+  import { getArticleCategory } from '$lib/services/classifier';
   import { ContentTag, TAG_INFO } from '$lib/types/source';
 
   const TOTAL_LIMIT = 100;
-  const ARTICLES_PER_PAGE = 15;
 
   let isRefreshing = false;
 
@@ -27,7 +26,7 @@
     package: Package, rocket: Rocket, briefcase: Briefcase, 'book-open': BookOpen, newspaper: Newspaper
   };
 
-  // 缓存分类结果
+  // 缓存分类结果（基于源分类）
   let cachedArticles: typeof $filteredArticles = [];
   let cachedTags: typeof $filteredArticles = [];
 
@@ -35,7 +34,7 @@
     cachedArticles = $filteredArticles;
     cachedTags = $filteredArticles.map(a => ({
       ...a,
-      contentTag: classifyArticle(a)
+      contentTag: getArticleCategory(a)
     }));
   }
 
@@ -43,6 +42,7 @@
     ? cachedTags.filter(a => a.contentTag === $selectedTag)
     : cachedTags;
 
+  // 获取有文章的分类
   $: availableTags = (() => {
     const tags = new Set(cachedTags.map(a => a.contentTag));
     return Object.values(ContentTag).filter(t => tags.has(t));
@@ -106,10 +106,6 @@
     }
   }
 
-  function handleLoadMore() {
-    loadMoreArticles();
-  }
-
   onMount(async () => {
     loadFromCache();
     if ($articles.length === 0) {
@@ -125,7 +121,7 @@
 </script>
 
 <div class="min-h-screen">
-  <!-- 标签筛选栏 -->
+  <!-- 分类筛选栏 -->
   <div class="sticky top-0 z-40 glass">
     <div class="px-4 py-3">
       <div class="flex gap-2 overflow-x-auto scrollbar-hide">
@@ -136,13 +132,13 @@
           全部
         </button>
         {#each availableTags as tag}
-          {@const Icon = iconMap[TAG_INFO[tag].icon] || Newspaper}
+          {@const Icon = iconMap[TAG_INFO[tag]?.icon] || Newspaper}
           <button
             class="tag-btn shrink-0 px-4 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 {$selectedTag === tag ? 'active' : ''}"
             on:click={() => selectedTag.set(tag)}
           >
             <Icon class="w-3.5 h-3.5" />
-            {TAG_INFO[tag].label}
+            {TAG_INFO[tag]?.label || tag}
           </button>
         {/each}
       </div>
@@ -172,7 +168,7 @@
       <NewsList groups={cachedGroups} />
 
       <div class="flex justify-center py-6">
-        <button class="load-more-btn" on:click={handleLoadMore}>
+        <button class="load-more-btn" on:click={loadMoreArticles}>
           加载更多
         </button>
       </div>

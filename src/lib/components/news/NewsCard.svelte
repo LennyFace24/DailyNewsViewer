@@ -3,7 +3,7 @@
   import { Bookmark, BookmarkCheck, Clock, User } from 'lucide-svelte';
   import type { Article } from '$lib/types/news';
   import { ContentTag, TAG_INFO } from '$lib/types/source';
-  import { classifyArticle } from '$lib/services/classifier';
+  import { getArticleCategory } from '$lib/services/classifier';
   import { formatRelativeTime } from '$lib/utils/date';
   import { truncateText } from '$lib/utils/text';
   import { toggleBookmark } from '$lib/stores/articles';
@@ -17,7 +17,7 @@
 
   $: isCompact = $settings.cardStyle === 'compact';
   $: isSpacious = $settings.cardStyle === 'spacious';
-  $: tag = classifyArticle(article);
+  $: tag = getArticleCategory(article);
 
   function handleClick() {
     goto(`/article/${encodeURIComponent(article.id)}`);
