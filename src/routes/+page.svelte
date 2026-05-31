@@ -7,7 +7,7 @@
   import {
     articles, filteredArticles, displayedArticles,
     addArticlesToPool, saveToCache, loadFromCache,
-    refreshArticles, loadMoreArticles
+    refreshArticles, loadMoreArticles, hasMore
   } from '$lib/stores/articles';
   import { enabledSources } from '$lib/stores/sources';
   import { selectedTag } from '$lib/stores/ui';
@@ -19,6 +19,7 @@
   const TOTAL_LIMIT = 100;
 
   let isRefreshing = false;
+  let isLoadingMore = false;
 
   const iconMap: Record<string, any> = {
     brain: Brain, shield: Shield, globe: Globe, smartphone: Smartphone,
@@ -26,7 +27,7 @@
     package: Package, rocket: Rocket, briefcase: Briefcase, 'book-open': BookOpen, newspaper: Newspaper
   };
 
-  // 缓存分类结果（基于源分类）
+  // 缓存分类结果
   let cachedArticles: typeof $filteredArticles = [];
   let cachedTags: typeof $filteredArticles = [];
 
@@ -42,7 +43,6 @@
     ? cachedTags.filter(a => a.contentTag === $selectedTag)
     : cachedTags;
 
-  // 获取有文章的分类
   $: availableTags = (() => {
     const tags = new Set(cachedTags.map(a => a.contentTag));
     return Object.values(ContentTag).filter(t => tags.has(t));
@@ -106,6 +106,25 @@
     }
   }
 
+  async function handleLoadMore() {
+    if (isLoadingMore || !$hasMore) return;
+    isLoadingMore = true;
+    loadMoreArticles();
+    // 模拟加载延迟
+    setTimeout(() => isLoadingMore = false, 300);
+  }
+
+  // 滚动检测
+  function handleScroll(e: Event) {
+    const target = e.target as HTMLElement;
+    if (!target) return;
+
+    const { scrollTop, scrollHeight, clientHeight } = target;
+    if (scrollHeight - scrollTop - clientHeight < 300) {
+      handleLoadMore();
+    }
+  }
+
   onMount(async () => {
     loadFromCache();
     if ($articles.length === 0) {
@@ -120,7 +139,7 @@
   });
 </script>
 
-<div class="min-h-screen">
+<div class="min-h-screen" on:scroll={handleScroll}>
   <!-- 分类筛选栏 -->
   <div class="sticky top-0 z-40 glass">
     <div class="px-4 py-3">
@@ -160,18 +179,27 @@
       <EmptyState
         icon="newspaper"
         title="暂无内容"
-        description="下拉刷新获取最新资讯"
+        description="下拉刷新获取最新资讯（仅显示最近2天）"
         actionLabel="刷新"
         onAction={handleRefresh}
       />
     {:else}
       <NewsList groups={cachedGroups} />
 
-      <div class="flex justify-center py-6">
-        <button class="load-more-btn" on:click={loadMoreArticles}>
-          加载更多
-        </button>
-      </div>
+      <!-- 加载状态 -->
+      {#if isLoadingMore}
+        <div class="flex justify-center py-6">
+          <div class="flex gap-1">
+            <div class="w-2 h-2 bg-white/30 rounded-full animate-bounce" style="animation-delay: 0ms" />
+            <div class="w-2 h-2 bg-white/30 rounded-full animate-bounce" style="animation-delay: 150ms" />
+            <div class="w-2 h-2 bg-white/30 rounded-full animate-bounce" style="animation-delay: 300ms" />
+          </div>
+        </div>
+      {:else if !$hasMore}
+        <div class="text-center py-6 text-xs text-muted-foreground/40">
+          <p>已显示全部内容（最近2天）</p>
+        </div>
+      {/if}
 
       <div class="text-center py-2 text-xs text-muted-foreground/40">
         <p>共 {displayArticles.length} 条</p>
@@ -211,20 +239,5 @@
   .refresh-btn:active {
     transform: scale(0.95);
     background: rgba(255, 255, 255, 0.15);
-  }
-
-  .load-more-btn {
-    padding: 10px 32px;
-    border-radius: 100px;
-    background: rgba(255, 255, 255, 0.08);
-    color: rgba(255, 255, 255, 0.7);
-    font-size: 14px;
-    border: none;
-    cursor: pointer;
-    transition: all 0.2s;
-  }
-  .load-more-btn:active {
-    background: rgba(255, 255, 255, 0.15);
-    transform: scale(0.98);
   }
 </style>

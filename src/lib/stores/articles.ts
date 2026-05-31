@@ -15,14 +15,24 @@ export const filter = writable<ArticleFilter>({ sortBy: 'newest' });
 /** 是否正在加载 */
 export const isLoading = writable(false);
 
+/** 是否还有更多内容 */
+export const hasMore = writable(true);
+
 /** 最后刷新时间 */
 export const lastRefreshTime = writable<Date | null>(null);
 
 /** 已显示过的文章ID */
 const displayedIds = new Set<string>();
 
-/** 每个分类每次显示的数量 */
-const ARTICLES_PER_PAGE = 15;
+/** 每次加载的数量 */
+const LOAD_BATCH_SIZE = 20;
+
+/** 只保留最近2天的文章 */
+function filterRecentArticles(articles: Article[]): Article[] {
+  const twoDaysAgo = new Date();
+  twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+  return articles.filter(a => new Date(a.publishedAt) >= twoDaysAgo);
+}
 
 /** 过滤后的文章 */
 export const filteredArticles = derived(
@@ -83,9 +93,11 @@ export const bookmarkCount = derived(displayedArticles, ($articles) =>
 /** 加载缓存 */
 export function loadFromCache(): void {
   const cached = ArticleCache.loadRecent();
-  if (cached.length > 0) {
-    articles.set(cached);
-    // 初始显示第一批
+  // 只保留最近2天的
+  const recent = filterRecentArticles(cached);
+  if (recent.length > 0) {
+    articles.set(recent);
+    // 初始加载第一批
     loadMoreArticles();
   }
 }
@@ -98,57 +110,48 @@ export function addArticlesToPool(newArticles: Article[]): void {
     for (const a of newArticles) {
       if (!map.has(a.id)) map.set(a.id, a);
     }
-    return Array.from(map.values());
+    // 只保留最近2天的
+    const all = Array.from(map.values());
+    return filterRecentArticles(all);
   });
 }
 
-/** 加载更多文章（分页） */
+/** 加载更多文章（渐进式） */
 export function loadMoreArticles(): void {
   const all = get(articles);
   const current = get(displayedArticles);
 
-  // 筛选未显示过的文章
-  const unseen = all.filter(a => !displayedIds.has(a.id));
-
-  if (unseen.length >= ARTICLES_PER_PAGE) {
-    // 随机选取一批
-    const shuffled = shuffleArray(unseen);
-    const selected = shuffled.slice(0, ARTICLES_PER_PAGE);
-    selected.forEach(a => displayedIds.add(a.id));
-    displayedArticles.set([...current, ...selected]);
-  } else if (unseen.length > 0) {
-    // 剩余的全部加入
-    unseen.forEach(a => displayedIds.add(a.id));
-    displayedArticles.set([...current, ...unseen]);
-  } else {
-    // 所有都显示过了，随机重复
-    const shuffled = shuffleArray(all);
-    const selected = shuffled.slice(0, ARTICLES_PER_PAGE);
-    displayedArticles.set([...current, ...selected]);
-  }
-}
-
-/** 刷新 - 拉取新内容并显示 */
-export function refreshArticles(): void {
-  const all = get(articles);
-  const current = get(displayedArticles);
-
-  // 优先显示最新的未显示内容
+  // 筛选未显示过的文章，按时间排序
   const unseen = all
     .filter(a => !displayedIds.has(a.id))
     .sort((a, b) => new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime());
 
   if (unseen.length > 0) {
-    const selected = unseen.slice(0, ARTICLES_PER_PAGE);
+    const selected = unseen.slice(0, LOAD_BATCH_SIZE);
     selected.forEach(a => displayedIds.add(a.id));
-    // 替换当前显示的内容（刷新效果）
-    displayedArticles.set(selected);
+    displayedArticles.set([...current, ...selected]);
+    hasMore.set(unseen.length > LOAD_BATCH_SIZE);
   } else {
-    // 没有新内容，随机显示
-    const shuffled = shuffleArray(all);
-    const selected = shuffled.slice(0, ARTICLES_PER_PAGE);
-    displayedArticles.set(selected);
+    hasMore.set(false);
   }
+}
+
+/** 刷新 - 拉取新内容并替换显示 */
+export function refreshArticles(): void {
+  const all = get(articles);
+
+  // 清空已显示记录
+  displayedIds.clear();
+
+  // 按时间排序，取最新的
+  const sorted = [...all].sort((a, b) =>
+    new Date(b.publishedAt).getTime() - new Date(a.publishedAt).getTime()
+  );
+
+  const selected = sorted.slice(0, LOAD_BATCH_SIZE);
+  selected.forEach(a => displayedIds.add(a.id));
+  displayedArticles.set(selected);
+  hasMore.set(all.length > LOAD_BATCH_SIZE);
 }
 
 /** 标记为已读 */
@@ -182,14 +185,4 @@ export function saveToCache(): void {
   const current = get(articles);
   ArticleCache.save(current);
   lastRefreshTime.set(new Date());
-}
-
-/** 打乱数组 */
-function shuffleArray<T>(array: T[]): T[] {
-  const shuffled = [...array];
-  for (let i = shuffled.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-  }
-  return shuffled;
 }
