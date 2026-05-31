@@ -5,11 +5,16 @@
   import { page } from '$app/stores';
   import BottomNav from '$lib/components/layout/BottomNav.svelte';
   import ExitDialog from '$lib/components/shared/ExitDialog.svelte';
+  import UpdateDialog from '$lib/components/shared/UpdateDialog.svelte';
   import { loadFromCache } from '$lib/stores/articles';
+  import { checkForUpdate, getCurrentVersion, compareVersions } from '$lib/services/updater';
+  import type { ReleaseInfo } from '$lib/services/updater';
   import { Capacitor } from '@capacitor/core';
   import { App } from '@capacitor/app';
 
   let showExitDialog = false;
+  let showUpdateDialog = false;
+  let latestRelease: ReleaseInfo | null = null;
 
   $: currentPath = $page.url.pathname;
 
@@ -25,8 +30,28 @@
     App.exitApp();
   }
 
+  async function checkUpdate() {
+    try {
+      const release = await checkForUpdate();
+      if (!release) return;
+
+      const currentVersion = getCurrentVersion();
+      const hasUpdate = compareVersions(currentVersion, release.version) > 0;
+
+      if (hasUpdate) {
+        latestRelease = release;
+        showUpdateDialog = true;
+      }
+    } catch (error) {
+      console.error('Update check failed:', error);
+    }
+  }
+
   onMount(() => {
     loadFromCache();
+
+    // 检查更新
+    checkUpdate();
 
     if (Capacitor.isNativePlatform()) {
       App.addListener('backButton', () => {
@@ -50,4 +75,10 @@
   <BottomNav on:back={handleBack} />
 
   <ExitDialog bind:open={showExitDialog} on:confirm={handleExit} />
+
+  <UpdateDialog
+    bind:open={showUpdateDialog}
+    release={latestRelease}
+    on:close={() => showUpdateDialog = false}
+  />
 </div>
