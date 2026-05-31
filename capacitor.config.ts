@@ -8,20 +8,19 @@ const config: CapacitorConfig = {
   plugins: {
     SplashScreen: {
       launchShowDuration: 1500,
-      backgroundColor: '#0f172a',
-      showSpinner: true,
-      spinnerColor: '#38bdf8'
+      backgroundColor: '#0f0f0f',
+      showSpinner: false
     },
     StatusBar: {
       style: 'DARK',
-      backgroundColor: '#0f172a'
+      backgroundColor: '#0f0f0f'
     }
+  },
+  android: {
+    // 允许全屏显示，覆盖导航栏
+    allowMixedContent: true,
+    backgroundColor: '#0f0f0f'
   }
-  // 开发时取消注释以下配置
-  // server: {
-  //   url: 'http://10.0.2.2:5173',
-  //   cleartext: true
-  // }
 };
 
 export default config;
