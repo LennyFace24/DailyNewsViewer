@@ -1,15 +1,18 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { ArrowLeft, ExternalLink, Bookmark, BookmarkCheck, Clock, User, Share2 } from 'lucide-svelte';
-  import { Button } from '$lib/components/ui/button/index.js';
-  import { Badge } from '$lib/components/ui/badge/index.js';
-  import { Separator } from '$lib/components/ui/separator/index.js';
+  import { ArrowLeft, ExternalLink, Bookmark, BookmarkCheck, Clock, User, Share2, Languages } from 'lucide-svelte';
   import type { Article } from '$lib/types/news';
   import { formatRelativeTime } from '$lib/utils/date';
   import { markAsRead, toggleBookmark } from '$lib/stores/articles';
+  import { settings } from '$lib/stores/settings';
+  import { translateArticle } from '$lib/services/translate';
 
   export let article: Article;
   export let onBack: (() => void) | undefined = undefined;
+
+  let translatedSummary = '';
+  let isTranslating = false;
+  let showTranslated = false;
 
   onMount(() => {
     markAsRead(article.id);
@@ -22,33 +25,62 @@
       navigator.clipboard.writeText(article.url);
     }
   }
+
+  async function handleTranslate() {
+    if (showTranslated) {
+      showTranslated = false;
+      return;
+    }
+
+    if (translatedSummary) {
+      showTranslated = true;
+      return;
+    }
+
+    if (!$settings.aiTranslateEnabled) return;
+
+    isTranslating = true;
+    try {
+      translatedSummary = await translateArticle(article.summary);
+      showTranslated = true;
+    } catch (error) {
+      console.error('Translation failed:', error);
+    } finally {
+      isTranslating = false;
+    }
+  }
 </script>
 
 <div class="min-h-screen bg-background">
-  <header class="sticky top-0 z-50 bg-background/90 backdrop-blur-xl border-b safe-area-top">
+  <header class="sticky top-0 z-50 glass" style="padding-top: env(safe-area-inset-top, 0px);">
     <div class="flex items-center justify-between px-4 h-12">
       <div class="flex items-center gap-2">
         {#if onBack}
-          <Button variant="ghost" size="icon" class="h-8 w-8" on:click={onBack}>
+          <button class="icon-btn" on:click={onBack}>
             <ArrowLeft class="w-4 h-4" />
-          </Button>
+          </button>
         {/if}
-        <Badge variant="secondary" class="text-xs">{article.sourceName}</Badge>
+        <span class="text-xs px-2 py-1 rounded-full bg-white/10">{article.sourceName}</span>
       </div>
       <div class="flex items-center gap-1">
-        <Button variant="ghost" size="icon" class="h-8 w-8" on:click={() => toggleBookmark(article.id)}>
+        {#if $settings.aiTranslateEnabled}
+          <button class="icon-btn" on:click={handleTranslate} disabled={isTranslating}>
+            <Languages class="w-4 h-4 {isTranslating ? 'animate-pulse' : ''} {showTranslated ? 'text-primary' : ''}" />
+          </button>
+        {/if}
+        <button class="icon-btn" on:click={() => toggleBookmark(article.id)}>
           {#if article.isBookmarked}
             <BookmarkCheck class="w-4 h-4 text-primary" />
           {:else}
             <Bookmark class="w-4 h-4" />
           {/if}
-        </Button>
-        <Button variant="ghost" size="icon" class="h-8 w-8" on:click={handleShare}>
+        </button>
+        <button class="icon-btn" on:click={handleShare}>
           <Share2 class="w-4 h-4" />
-        </Button>
-        <Button variant="ghost" size="icon" class="h-8 w-8" on:click={() => window.open(article.url, '_blank')}>
+        </button>
+        <button class="icon-btn" on:click={() => window.open(article.url, '_blank')}>
           <ExternalLink class="w-4 h-4" />
-        </Button>
+        </button>
       </div>
     </div>
   </header>
@@ -63,96 +95,143 @@
 
     {#if article.thumbnail}
       <div class="mb-6 rounded-xl overflow-hidden">
-        <img src={article.thumbnail} alt={article.title} class="w-full h-auto" />
+        <img src={article.thumbnail} alt={article.title} class="w-full h-auto" loading="lazy" />
       </div>
     {/if}
 
-    <Separator class="mb-6" />
+    <div class="separator" />
 
-    <!-- 完整内容 -->
+    <!-- 摘要 -->
+    {#if article.summary}
+      <div class="mb-6 p-4 rounded-xl bg-white/5 border border-white/5">
+        <p class="text-muted-foreground leading-relaxed text-sm">
+          {showTranslated ? translatedSummary : article.summary}
+        </p>
+        {#if showTranslated}
+          <button class="text-xs text-primary mt-2" on:click={() => showTranslated = false}>
+            显示原文
+          </button>
+        {/if}
+      </div>
+    {/if}
+
+    <!-- 正文 -->
     <div class="article-content">
       {#if article.content}
         {@html article.content}
       {:else}
-        <p>{article.summary}</p>
+        <p class="text-muted-foreground">{article.summary}</p>
       {/if}
     </div>
 
-    <Separator class="my-8" />
+    <div class="separator" />
 
-    <div class="flex justify-center pb-8">
-      <Button on:click={() => window.open(article.url, '_blank')}>
+    <div class="flex justify-center py-8">
+      <button class="primary-btn" on:click={() => window.open(article.url, '_blank')}>
         阅读原文 <ExternalLink class="w-4 h-4 ml-2" />
-      </Button>
+      </button>
     </div>
   </article>
 </div>
 
 <style>
+  .icon-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.7);
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .icon-btn:active {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+  }
+  .icon-btn:disabled {
+    opacity: 0.5;
+  }
+
+  .separator {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.06);
+    margin: 24px 0;
+  }
+
+  .primary-btn {
+    display: flex;
+    align-items: center;
+    padding: 12px 24px;
+    border-radius: 100px;
+    background: rgba(255, 255, 255, 0.12);
+    color: white;
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .primary-btn:active {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  /* 文章内容样式 */
   :global(.article-content) {
     line-height: 1.8;
-    color: hsl(var(--foreground));
+    color: rgba(255, 255, 255, 0.9);
     word-break: break-word;
   }
   :global(.article-content img) {
     max-width: 100%;
     height: auto;
-    border-radius: 0.75rem;
-    margin: 1rem 0;
+    border-radius: 12px;
+    margin: 16px 0;
   }
   :global(.article-content a) {
-    color: hsl(var(--primary));
+    color: rgba(255, 255, 255, 0.9);
     text-decoration: underline;
+    text-underline-offset: 4px;
   }
   :global(.article-content pre) {
-    background: hsl(var(--muted));
-    padding: 1rem;
-    border-radius: 0.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 16px;
+    border-radius: 12px;
     overflow-x: auto;
-    font-size: 0.875rem;
-    margin: 1rem 0;
+    font-size: 13px;
+    margin: 16px 0;
   }
   :global(.article-content code) {
-    background: hsl(var(--muted));
-    padding: 0.125rem 0.375rem;
-    border-radius: 0.25rem;
-    font-size: 0.875rem;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 13px;
   }
   :global(.article-content pre code) {
     background: transparent;
     padding: 0;
   }
   :global(.article-content blockquote) {
-    border-left: 3px solid hsl(var(--primary));
-    padding-left: 1rem;
-    margin: 1rem 0;
-    color: hsl(var(--muted-foreground));
+    border-left: 3px solid rgba(255, 255, 255, 0.2);
+    padding-left: 16px;
+    margin: 16px 0;
+    color: rgba(255, 255, 255, 0.6);
   }
   :global(.article-content h2, .article-content h3, .article-content h4) {
     font-weight: 600;
-    margin: 1.5em 0 0.5em;
+    margin: 24px 0 12px;
   }
   :global(.article-content p) {
-    margin-bottom: 1em;
+    margin-bottom: 16px;
   }
   :global(.article-content ul, .article-content ol) {
-    padding-left: 1.5em;
-    margin-bottom: 1em;
+    padding-left: 24px;
+    margin-bottom: 16px;
   }
   :global(.article-content li) {
-    margin-bottom: 0.5em;
-  }
-  :global(.article-content table) {
-    width: 100%;
-    border-collapse: collapse;
-    margin: 1rem 0;
-  }
-  :global(.article-content th, .article-content td) {
-    border: 1px solid hsl(var(--border));
-    padding: 0.5rem;
-    text-align: left;
-  }
-  :global(.article-content th) {
-    background: hsl(var(--muted));
+    margin-bottom: 8px;
   }
 </style>

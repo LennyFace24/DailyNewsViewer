@@ -11,7 +11,12 @@ const defaultSettings: AppSettings = {
   proxyEnabled: false,
   proxyHost: '127.0.0.1',
   proxyPort: '7890',
-  proxyType: 'http'
+  proxyType: 'http',
+  // AI翻译默认关闭
+  aiTranslateEnabled: false,
+  aiBaseUrl: '',
+  aiApiKey: '',
+  aiProvider: 'openai'
 };
 
 function loadSettings(): AppSettings {

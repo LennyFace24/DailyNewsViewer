@@ -1,5 +1,6 @@
 <script lang="ts">
-  import { Globe, Layout, Eye, CheckCheck, Trash2, RotateCcw, Info } from 'lucide-svelte';
+  import { goto } from '$app/navigation';
+  import { Globe, Layout, Eye, CheckCheck, Trash2, RotateCcw, Info, Languages } from 'lucide-svelte';
   import { settings, updateSetting, resetSettings } from '$lib/stores/settings';
   import { articles, markAllAsRead } from '$lib/stores/articles';
   import { ArticleCache } from '$lib/services/storage';
@@ -75,6 +76,20 @@
       </div>
     </section>
 
+    <!-- AI翻译 -->
+    <section class="mb-6">
+      <h2 class="section-title"><Languages class="w-3.5 h-3.5" /> AI 翻译</h2>
+      <div class="glass-card overflow-hidden">
+        <div class="setting-row" on:click={() => goto('/settings/translate')}>
+          <div>
+            <div class="setting-label">翻译设置</div>
+            <div class="setting-desc">{$settings.aiTranslateEnabled ? '已开启' : '未开启'}</div>
+          </div>
+          <div class="text-white/30">›</div>
+        </div>
+      </div>
+    </section>
+
     <!-- 外观 -->
     <section class="mb-6">
       <h2 class="section-title"><Layout class="w-3.5 h-3.5" /> 外观</h2>
@@ -141,7 +156,7 @@
       <RotateCcw class="w-4 h-4" /> 恢复默认
     </button>
 
-    <p class="text-center text-xs text-muted-foreground/40 mt-6">DailyTech v0.5.0</p>
+    <p class="text-center text-xs text-muted-foreground/40 mt-6">DailyTech v0.7.0</p>
   </div>
 </div>
 
@@ -149,7 +164,7 @@
 {#if showClearDialog}
   <div class="modal-overlay" on:click={() => showClearDialog = false}>
     <div class="modal-box glass-card" on:click|stopPropagation>
-      <div class="modal-icon">
+      <div class="modal-icon-box">
         <Trash2 class="w-8 h-8 text-muted-foreground" />
       </div>
       <div class="modal-text">
@@ -168,7 +183,7 @@
 {#if showResetDialog}
   <div class="modal-overlay" on:click={() => showResetDialog = false}>
     <div class="modal-box glass-card" on:click|stopPropagation>
-      <div class="modal-icon">
+      <div class="modal-icon-box">
         <RotateCcw class="w-8 h-8 text-muted-foreground" />
       </div>
       <div class="modal-text">
@@ -202,6 +217,7 @@
     align-items: center;
     justify-content: space-between;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    cursor: pointer;
   }
 
   .setting-label {
@@ -335,29 +351,18 @@
     background: rgba(0, 0, 0, 0.7);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    animation: fadeIn 0.2s ease-out;
   }
 
   .modal-box {
     width: 100%;
     max-width: 384px;
     padding: 24px;
-    animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .modal-icon {
+  .modal-icon-box {
     display: flex;
     justify-content: center;
     margin-bottom: 16px;
-  }
-  .modal-icon > :global(div) {
-    width: 64px;
-    height: 64px;
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.05);
-    display: flex;
-    align-items: center;
-    justify-content: center;
   }
 
   .modal-text {
@@ -408,15 +413,5 @@
   }
   .secondary-btn:active {
     background: rgba(255, 255, 255, 0.15);
-  }
-
-  @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-  }
-
-  @keyframes scaleIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
   }
 </style>
