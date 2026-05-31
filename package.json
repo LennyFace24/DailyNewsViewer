@@ -40,7 +40,7 @@
     "radix-svelte": "^0.9.0",
     "rss-parser": "^3.13.0",
     "tailwind-merge": "^2.2.0",
-    "tailwind-variants": "^0.2.0"
+    "tailwind-variants": "^3.2.2"
   },
   "type": "module"
 }
