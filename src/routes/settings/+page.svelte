@@ -1,20 +1,55 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { Globe, Layout, Eye, CheckCheck, Trash2, RotateCcw, Info, Languages } from 'lucide-svelte';
+  import { Globe, Layout, Eye, CheckCheck, Trash2, RotateCcw, Info, Languages, Download } from 'lucide-svelte';
   import { settings, updateSetting, resetSettings } from '$lib/stores/settings';
   import { articles, markAllAsRead } from '$lib/stores/articles';
   import { ArticleCache } from '$lib/services/storage';
+  import { checkForUpdate, getCurrentVersion, compareVersions } from '$lib/services/updater';
+  import type { ReleaseInfo } from '$lib/services/updater';
+  import UpdateDialog from '$lib/components/shared/UpdateDialog.svelte';
 
   $: unreadCount = $articles.filter(a => !a.isRead).length;
   $: bookmarkCount = $articles.filter(a => a.isBookmarked).length;
 
   let showClearDialog = false;
   let showResetDialog = false;
+  let showUpdateDialog = false;
+  let latestRelease: ReleaseInfo | null = null;
+  let isCheckingUpdate = false;
+  let updateMessage = '';
+
+  const currentVersion = getCurrentVersion();
 
   function clearCache() {
     ArticleCache.clearExpired();
     showClearDialog = false;
     window.location.reload();
+  }
+
+  async function handleCheckUpdate() {
+    isCheckingUpdate = true;
+    updateMessage = '';
+
+    try {
+      const release = await checkForUpdate();
+      if (!release) {
+        updateMessage = '无法获取更新信息';
+        return;
+      }
+
+      const comparison = compareVersions(currentVersion, release.version);
+
+      if (comparison > 0) {
+        latestRelease = release;
+        showUpdateDialog = true;
+      } else {
+        updateMessage = '已是最新版本';
+      }
+    } catch (error) {
+      updateMessage = '检查更新失败';
+    } finally {
+      isCheckingUpdate = false;
+    }
   }
 </script>
 
@@ -152,11 +187,27 @@
       </div>
     </section>
 
+    <!-- 关于 -->
+    <section class="mb-6">
+      <h2 class="section-title"><Info class="w-3.5 h-3.5" /> 关于</h2>
+      <div class="glass-card overflow-hidden">
+        <div class="setting-row">
+          <div class="setting-label">当前版本</div>
+          <div class="setting-value">v{currentVersion}</div>
+        </div>
+        <div class="action-row" on:click={handleCheckUpdate}>
+          <Download class="w-4 h-4 text-muted-foreground" />
+          <span>{isCheckingUpdate ? '检查中...' : '检查更新'}</span>
+        </div>
+        {#if updateMessage}
+          <div class="update-message">{updateMessage}</div>
+        {/if}
+      </div>
+    </section>
+
     <button class="reset-btn" on:click={() => showResetDialog = true}>
       <RotateCcw class="w-4 h-4" /> 恢复默认
     </button>
-
-    <p class="text-center text-xs text-muted-foreground/40 mt-6">DailyTech v0.7.0</p>
   </div>
 </div>
 
@@ -198,6 +249,13 @@
   </div>
 {/if}
 
+<!-- 更新弹窗 -->
+<UpdateDialog
+  bind:open={showUpdateDialog}
+  release={latestRelease}
+  on:close={() => showUpdateDialog = false}
+/>
+
 <style>
   .section-title {
     font-size: 12px;
@@ -217,7 +275,6 @@
     align-items: center;
     justify-content: space-between;
     border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    cursor: pointer;
   }
 
   .setting-label {
@@ -318,6 +375,13 @@
   }
   .action-row:active {
     background: rgba(255, 255, 255, 0.05);
+  }
+
+  .update-message {
+    padding: 12px 16px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.5);
+    text-align: center;
   }
 
   .reset-btn {
