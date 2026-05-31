@@ -16,7 +16,8 @@ const defaultSettings: AppSettings = {
   aiTranslateEnabled: false,
   aiBaseUrl: '',
   aiApiKey: '',
-  aiProvider: 'openai'
+  aiProvider: 'chat_completion',
+  aiModel: ''
 };
 
 function loadSettings(): AppSettings {

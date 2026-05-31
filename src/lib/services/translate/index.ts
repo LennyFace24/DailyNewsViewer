@@ -28,7 +28,7 @@ export async function translateText(text: string): Promise<string> {
 
     const url = `${s.aiBaseUrl}${provider.endpoint}`;
     const headers = provider.headers(s.aiApiKey);
-    const body = provider.body(text, '');
+    const body = provider.body(text, s.aiModel);
 
     const response = await fetch(url, {
       method: 'POST',

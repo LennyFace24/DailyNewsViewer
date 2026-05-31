@@ -1,14 +1,42 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { ArrowLeft, Languages } from 'lucide-svelte';
+  import { ArrowLeft, Languages, RefreshCw, Check } from 'lucide-svelte';
   import { settings, updateSetting } from '$lib/stores/settings';
-  import { AI_PROVIDERS, getProviderList } from '$lib/types/settings';
+  import { AI_PROVIDERS, getProviderList, fetchModels } from '$lib/types/settings';
 
   let testResult = '';
   let isTesting = false;
+  let models: string[] = [];
+  let isLoadingModels = false;
+  let showModelList = false;
 
   $: currentProvider = AI_PROVIDERS[$settings.aiProvider];
   $: providers = getProviderList();
+
+  async function handleFetchModels() {
+    if (!$settings.aiBaseUrl || !$settings.aiApiKey) {
+      alert('请先填写 Base URL 和 API Key');
+      return;
+    }
+
+    isLoadingModels = true;
+    showModelList = false;
+
+    try {
+      models = await fetchModels($settings.aiProvider, $settings.aiBaseUrl, $settings.aiApiKey);
+      showModelList = true;
+    } catch (error) {
+      console.error('Failed to fetch models:', error);
+      alert('获取模型列表失败');
+    } finally {
+      isLoadingModels = false;
+    }
+  }
+
+  function selectModel(model: string) {
+    updateSetting('aiModel', model);
+    showModelList = false;
+  }
 
   async function testConnection() {
     if (!$settings.aiApiKey || !$settings.aiBaseUrl) {
@@ -23,7 +51,7 @@
       const provider = AI_PROVIDERS[$settings.aiProvider];
       const url = `${$settings.aiBaseUrl}${provider.endpoint}`;
       const headers = provider.headers($settings.aiApiKey);
-      const body = provider.body('Hello, how are you?');
+      const body = provider.body('Hello, how are you?', $settings.aiModel);
 
       const response = await fetch(url, {
         method: 'POST',
@@ -86,7 +114,7 @@
           {#each providers as { key, config }}
             <button
               class="provider-card glass-card {$settings.aiProvider === key ? 'active' : ''}"
-              on:click={() => updateSetting('aiProvider', key)}
+              on:click={() => { updateSetting('aiProvider', key); updateSetting('aiModel', ''); models = []; showModelList = false; }}
             >
               <div class="provider-header">
                 <div class="provider-radio {$settings.aiProvider === key ? 'active' : ''}" />
@@ -113,7 +141,6 @@
                 placeholder={currentProvider?.baseUrlPlaceholder || ''}
                 class="input-field"
               />
-              <p class="input-hint">API 的基础地址，不包含端点路径</p>
             </div>
 
             <div>
@@ -127,10 +154,48 @@
               />
             </div>
 
+            <!-- 模型选择 -->
+            <div>
+              <div class="flex items-center justify-between mb-2">
+                <label class="input-label mb-0">模型</label>
+                <button
+                  class="fetch-models-btn"
+                  on:click={handleFetchModels}
+                  disabled={isLoadingModels || !$settings.aiBaseUrl || !$settings.aiApiKey}
+                >
+                  <RefreshCw class="w-3.5 h-3.5 {isLoadingModels ? 'animate-spin' : ''}" />
+                  {isLoadingModels ? '获取中...' : '获取模型列表'}
+                </button>
+              </div>
+
+              <input
+                value={$settings.aiModel}
+                on:change={(e) => updateSetting('aiModel', e.currentTarget.value)}
+                placeholder={currentProvider?.defaultModel || '模型名称'}
+                class="input-field"
+              />
+
+              <!-- 模型列表 -->
+              {#if showModelList && models.length > 0}
+                <div class="model-list">
+                  {#each models as model}
+                    <button
+                      class="model-item {$settings.aiModel === model ? 'active' : ''}"
+                      on:click={() => selectModel(model)}
+                    >
+                      <span>{model}</span>
+                      {#if $settings.aiModel === model}
+                        <Check class="w-4 h-4 text-primary" />
+                      {/if}
+                    </button>
+                  {/each}
+                </div>
+              {/if}
+            </div>
+
             <div>
               <label class="input-label">端点</label>
               <div class="endpoint-display">{currentProvider?.endpoint || ''}</div>
-              <p class="input-hint">由选择的 API 格式自动决定</p>
             </div>
 
             <button class="test-btn" on:click={testConnection} disabled={isTesting}>
@@ -153,15 +218,15 @@
           <div class="space-y-3 text-xs text-muted-foreground">
             <div>
               <div class="text-white/70 font-medium mb-1">Chat Completion</div>
-              <p>OpenAI、DeepSeek、通义千问、Moonshot 等兼容 OpenAI 格式的 API</p>
+              <p>OpenAI、DeepSeek、通义千问、Moonshot 等</p>
             </div>
             <div>
               <div class="text-white/70 font-medium mb-1">Response</div>
-              <p>OpenAI 新版 Response API 格式</p>
+              <p>OpenAI 新版 Response API</p>
             </div>
             <div>
               <div class="text-white/70 font-medium mb-1">Anthropic</div>
-              <p>Claude 系列模型的原生 API 格式</p>
+              <p>Claude 系列模型</p>
             </div>
           </div>
         </div>
@@ -288,10 +353,61 @@
     border-color: rgba(255, 255, 255, 0.2);
   }
 
-  .input-hint {
-    font-size: 11px;
-    color: rgba(255, 255, 255, 0.3);
-    margin-top: 4px;
+  .fetch-models-btn {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .fetch-models-btn:active {
+    background: rgba(255, 255, 255, 0.15);
+  }
+  .fetch-models-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+
+  .model-list {
+    margin-top: 8px;
+    max-height: 200px;
+    overflow-y: auto;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.3);
+  }
+
+  .model-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    font-size: 13px;
+    font-family: monospace;
+    color: rgba(255, 255, 255, 0.7);
+    background: transparent;
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    cursor: pointer;
+    width: 100%;
+    text-align: left;
+    transition: background 0.15s;
+  }
+  .model-item:last-child {
+    border-bottom: none;
+  }
+  .model-item:active {
+    background: rgba(255, 255, 255, 0.05);
+  }
+  .model-item.active {
+    color: white;
+    background: rgba(255, 255, 255, 0.08);
   }
 
   .endpoint-display {
@@ -358,5 +474,11 @@
   }
   .test-result.success {
     background: rgba(34, 197, 94, 0.1);
+  }
+
+  .separator {
+    height: 1px;
+    background: rgba(255, 255, 255, 0.06);
+    margin: 16px 0;
   }
 </style>
