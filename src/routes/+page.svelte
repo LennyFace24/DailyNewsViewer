@@ -141,7 +141,7 @@
 
 <div class="min-h-screen" on:scroll={handleScroll}>
   <!-- 分类筛选栏 -->
-  <div class="sticky top-0 z-40 glass">
+  <div class="sticky top-0 z-40 glass" style="padding-top: env(safe-area-inset-top, 0px);">
     <div class="px-4 py-3">
       <div class="flex gap-2 overflow-x-auto scrollbar-hide">
         <button
