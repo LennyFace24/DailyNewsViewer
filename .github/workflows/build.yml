@@ -85,23 +85,17 @@ jobs:
       - name: Generate changelog
         id: changelog
         run: |
-          # 获取上一个tag
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
 
           if [ -z "$PREV_TAG" ]; then
             echo "## 首次发布" > CHANGELOG.md
             echo "" >> CHANGELOG.md
-            git log --pretty=format:"- %s (%h)" HEAD >> CHANGELOG.md
+            git log --pretty=format:"- %s" HEAD >> CHANGELOG.md
           else
-            echo "## 更新内容 (从 $PREV_TAG 到 ${{ github.ref_name }})" > CHANGELOG.md
+            echo "## 更新内容" > CHANGELOG.md
             echo "" >> CHANGELOG.md
-            git log --pretty=format:"- %s (%h)" ${PREV_TAG}..HEAD >> CHANGELOG.md
+            git log --pretty=format:"- %s" ${PREV_TAG}..HEAD >> CHANGELOG.md
           fi
-
-          echo "" >> CHANGELOG.md
-          echo "---" >> CHANGELOG.md
-          echo "**构建时间**: $(date -u +'%Y-%m-%d %H:%M:%S UTC')" >> CHANGELOG.md
-          echo "**提交哈希**: ${{ github.sha }}" >> CHANGELOG.md
 
           cat CHANGELOG.md
 

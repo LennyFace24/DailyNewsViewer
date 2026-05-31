@@ -1,6 +1,6 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
-  import { Download, X, ExternalLink } from 'lucide-svelte';
+  import { Download, X } from 'lucide-svelte';
   import type { ReleaseInfo } from '$lib/services/updater';
   import { formatFileSize, formatChangelog } from '$lib/services/updater';
 
@@ -23,11 +23,57 @@
   }
 
   async function handleDownload() {
-    if (!release) return;
+    if (!release || isDownloading) return;
 
-    // 直接打开下载链接
-    window.open(release.apkUrl, '_blank');
-    close();
+    isDownloading = true;
+    downloadProgress = 0;
+
+    try {
+      // 直接下载APK
+      const response = await fetch(release.apkUrl);
+      if (!response.ok) throw new Error('Download failed');
+
+      const contentLength = response.headers.get('content-length');
+      const total = contentLength ? parseInt(contentLength) : 0;
+      let loaded = 0;
+
+      const reader = response.body?.getReader();
+      if (!reader) throw new Error('No reader');
+
+      const chunks: Uint8Array[] = [];
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        chunks.push(value);
+        loaded += value.length;
+
+        if (total > 0) {
+          downloadProgress = loaded / total;
+        }
+      }
+
+      // 创建下载链接
+      const blob = new Blob(chunks, { type: 'application/vnd.android.package-archive' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `DailyTech-${release.tagName}.apk`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+
+      close();
+    } catch (error) {
+      console.error('Download failed:', error);
+      // 失败时打开GitHub页面
+      window.open(release.apkUrl, '_blank');
+      close();
+    } finally {
+      isDownloading = false;
+    }
   }
 </script>
 
@@ -57,11 +103,17 @@
 
       <!-- 信息 -->
       <div class="release-info">
-        <span>发布时间: {new Date(release.publishedAt).toLocaleDateString('zh-CN')}</span>
         {#if release.apkSize > 0}
           <span>大小: {formatFileSize(release.apkSize)}</span>
         {/if}
       </div>
+
+      <!-- 下载进度 -->
+      {#if isDownloading}
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: {downloadProgress * 100}%" />
+        </div>
+      {/if}
 
       <!-- 按钮 -->
       <div class="modal-actions">
@@ -70,7 +122,7 @@
         </button>
         <button class="primary-btn" on:click={handleDownload} disabled={isDownloading}>
           {#if isDownloading}
-            <span class="animate-pulse">下载中... {Math.round(downloadProgress * 100)}%</span>
+            下载中 {Math.round(downloadProgress * 100)}%
           {:else}
             <Download class="w-4 h-4 mr-2" />
             下载更新
@@ -99,7 +151,6 @@
   .modal-box {
     width: 100%;
     max-width: 400px;
-    max-height: 80vh;
     display: flex;
     flex-direction: column;
     animation: scaleIn 0.3s cubic-bezier(0.16, 1, 0.3, 1);
@@ -184,6 +235,21 @@
     padding: 0 20px;
     font-size: 11px;
     color: rgba(255, 255, 255, 0.3);
+  }
+
+  .progress-bar {
+    margin: 12px 20px 0;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+  }
+
+  .progress-fill {
+    height: 100%;
+    background: white;
+    border-radius: 2px;
+    transition: width 0.2s;
   }
 
   .modal-actions {
