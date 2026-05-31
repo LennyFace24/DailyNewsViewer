@@ -10,14 +10,15 @@
     refreshArticles, loadMoreArticles
   } from '$lib/stores/articles';
   import { enabledSources } from '$lib/stores/sources';
+  import { selectedTag } from '$lib/stores/ui';
   import { fetchMultipleSources } from '$lib/services/rss';
   import { fetchHackerNewsTopStories } from '$lib/services/apis';
   import { classifyArticle } from '$lib/services/classifier';
   import { ContentTag, TAG_INFO } from '$lib/types/source';
 
-  const TOTAL_LIMIT = 100; // 每个源拉取更多内容
+  const TOTAL_LIMIT = 100;
+  const ARTICLES_PER_PAGE = 15;
 
-  let selectedTag: ContentTag | null = null;
   let isRefreshing = false;
 
   const iconMap: Record<string, any> = {
@@ -38,8 +39,8 @@
     }));
   }
 
-  $: displayArticles = selectedTag
-    ? cachedTags.filter(a => a.contentTag === selectedTag)
+  $: displayArticles = $selectedTag
+    ? cachedTags.filter(a => a.contentTag === $selectedTag)
     : cachedTags;
 
   $: availableTags = (() => {
@@ -52,7 +53,7 @@
   let cachedGroups: any[] = [];
 
   $: {
-    const key = `${selectedTag}-${displayArticles.length}-${displayArticles[0]?.id}`;
+    const key = `${$selectedTag}-${displayArticles.length}-${displayArticles[0]?.id}`;
     if (key !== lastDisplayKey) {
       lastDisplayKey = key;
       const groups = new Map<string, typeof displayArticles>();
@@ -96,9 +97,7 @@
     if (isRefreshing) return;
     isRefreshing = true;
     try {
-      // 先拉取新内容
       await fetchAllSources();
-      // 然后刷新显示
       refreshArticles();
     } catch (error) {
       console.error('Refresh failed:', error);
@@ -131,16 +130,16 @@
     <div class="px-4 py-3">
       <div class="flex gap-2 overflow-x-auto scrollbar-hide">
         <button
-          class="tag-btn shrink-0 px-4 py-1.5 rounded-full text-sm font-medium {selectedTag === null ? 'active' : ''}"
-          on:click={() => selectedTag = null}
+          class="tag-btn shrink-0 px-4 py-1.5 rounded-full text-sm font-medium {$selectedTag === null ? 'active' : ''}"
+          on:click={() => selectedTag.set(null)}
         >
           全部
         </button>
         {#each availableTags as tag}
           {@const Icon = iconMap[TAG_INFO[tag].icon] || Newspaper}
           <button
-            class="tag-btn shrink-0 px-4 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 {selectedTag === tag ? 'active' : ''}"
-            on:click={() => selectedTag = tag}
+            class="tag-btn shrink-0 px-4 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 {$selectedTag === tag ? 'active' : ''}"
+            on:click={() => selectedTag.set(tag)}
           >
             <Icon class="w-3.5 h-3.5" />
             {TAG_INFO[tag].label}
@@ -172,7 +171,6 @@
     {:else}
       <NewsList groups={cachedGroups} />
 
-      <!-- 加载更多按钮 -->
       <div class="flex justify-center py-6">
         <button class="load-more-btn" on:click={handleLoadMore}>
           加载更多
