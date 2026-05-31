@@ -33,14 +33,6 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
     overscroll-behavior: none;
-    /* 全面屏适配 */
-    padding-bottom: env(safe-area-inset-bottom, 0px);
-  }
-
-  /* 确保html和body高度100% */
-  html, body {
-    height: 100%;
-    background: hsl(var(--background));
   }
 
   ::-webkit-scrollbar {
