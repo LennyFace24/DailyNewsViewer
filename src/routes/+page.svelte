@@ -1,9 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
   import { Skeleton } from '$lib/components/ui/skeleton/index.js';
-  import { RefreshCw, Brain, Shield, Globe, Smartphone, Gamepad2, Settings, Database, Code, Package, Rocket, Briefcase, BookOpen, Newspaper } from 'lucide-svelte';
+  import { RefreshCw, Brain, Shield, Globe, Smartphone, Gamepad2, Settings, Database, Code, Package, Rocket, Briefcase, BookOpen, Newspaper, AlertCircle } from 'lucide-svelte';
   import NewsList from '$lib/components/news/NewsList.svelte';
-  import EmptyState from '$lib/components/shared/EmptyState.svelte';
   import {
     articles, filteredArticles, displayedArticles,
     addArticlesToPool, saveToCache, loadFromCache,
@@ -20,6 +19,8 @@
 
   let isRefreshing = false;
   let isLoadingMore = false;
+  let loadError = '';
+  let isFirstLoad = true;
 
   const iconMap: Record<string, any> = {
     brain: Brain, shield: Shield, globe: Globe, smartphone: Smartphone,
@@ -81,28 +82,57 @@
   }
 
   async function fetchAllSources() {
-    const results = await fetchMultipleSources($enabledSources, TOTAL_LIMIT);
-    let newArticles = Array.from(results.values()).flat();
+    loadError = '';
+    const sources = $enabledSources;
 
-    if ($enabledSources.some(s => s.id === 'hackernews')) {
-      const hn = await fetchHackerNewsTopStories(30);
-      newArticles.push(...hn);
+    if (sources.length === 0) {
+      loadError = '没有启用的数据源';
+      return;
     }
 
-    addArticlesToPool(newArticles);
+    let allArticles: any[] = [];
+
+    // 拉取RSS源
+    try {
+      const results = await fetchMultipleSources(sources, TOTAL_LIMIT);
+      allArticles = Array.from(results.values()).flat();
+    } catch (e) {
+      console.error('RSS fetch failed:', e);
+    }
+
+    // 拉取Hacker News
+    if (sources.some(s => s.id === 'hackernews')) {
+      try {
+        const hn = await fetchHackerNewsTopStories(30);
+        allArticles.push(...hn);
+      } catch (e) {
+        console.error('HN fetch failed:', e);
+      }
+    }
+
+    if (allArticles.length === 0) {
+      loadError = '无法获取内容，请检查网络连接';
+      return;
+    }
+
+    addArticlesToPool(allArticles);
     saveToCache();
   }
 
   async function handleRefresh() {
     if (isRefreshing) return;
     isRefreshing = true;
+    loadError = '';
+
     try {
       await fetchAllSources();
       refreshArticles();
     } catch (error) {
       console.error('Refresh failed:', error);
+      loadError = '刷新失败，请稍后重试';
     } finally {
       isRefreshing = false;
+      isFirstLoad = false;
     }
   }
 
@@ -110,15 +140,12 @@
     if (isLoadingMore || !$hasMore) return;
     isLoadingMore = true;
     loadMoreArticles();
-    // 模拟加载延迟
     setTimeout(() => isLoadingMore = false, 300);
   }
 
-  // 滚动检测
   function handleScroll(e: Event) {
     const target = e.target as HTMLElement;
     if (!target) return;
-
     const { scrollTop, scrollHeight, clientHeight } = target;
     if (scrollHeight - scrollTop - clientHeight < 300) {
       handleLoadMore();
@@ -127,15 +154,14 @@
 
   onMount(async () => {
     loadFromCache();
-    if ($articles.length === 0) {
-      isRefreshing = true;
-      try {
-        await fetchAllSources();
-        refreshArticles();
-      } finally {
-        isRefreshing = false;
-      }
+
+    // 如果有缓存，先显示缓存
+    if ($articles.length > 0) {
+      isFirstLoad = false;
     }
+
+    // 无论是否有缓存，都尝试刷新
+    await handleRefresh();
   });
 </script>
 
@@ -166,7 +192,8 @@
 
   <!-- 内容区 -->
   <div class="px-4 py-4">
-    {#if isRefreshing && $displayedArticles.length === 0}
+    <!-- 首次加载骨架屏 -->
+    {#if isFirstLoad && isRefreshing}
       <div class="space-y-4">
         {#each Array(3) as _}
           <div class="space-y-3">
@@ -175,18 +202,31 @@
           </div>
         {/each}
       </div>
+
+    <!-- 错误状态 -->
+    {:else if loadError && displayArticles.length === 0}
+      <div class="flex flex-col items-center justify-center py-20">
+        <AlertCircle class="w-12 h-12 text-muted-foreground mb-4" />
+        <p class="text-muted-foreground mb-4">{loadError}</p>
+        <button class="refresh-btn px-6 py-2" on:click={handleRefresh}>
+          重试
+        </button>
+      </div>
+
+    <!-- 空状态 -->
     {:else if displayArticles.length === 0}
-      <EmptyState
-        icon="newspaper"
-        title="暂无内容"
-        description="下拉刷新获取最新资讯（仅显示最近2天）"
-        actionLabel="刷新"
-        onAction={handleRefresh}
-      />
+      <div class="flex flex-col items-center justify-center py-20">
+        <Newspaper class="w-12 h-12 text-muted-foreground mb-4" />
+        <p class="text-muted-foreground mb-4">暂无内容</p>
+        <button class="refresh-btn px-6 py-2" on:click={handleRefresh}>
+          刷新
+        </button>
+      </div>
+
+    <!-- 内容列表 -->
     {:else}
       <NewsList groups={cachedGroups} />
 
-      <!-- 加载状态 -->
       {#if isLoadingMore}
         <div class="flex justify-center py-6">
           <div class="flex gap-1">
@@ -234,10 +274,17 @@
   }
 
   .refresh-btn {
+    background: rgba(255, 255, 255, 0.1);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
     transition: all 0.15s;
   }
   .refresh-btn:active {
-    transform: scale(0.95);
-    background: rgba(255, 255, 255, 0.15);
+    background: rgba(255, 255, 255, 0.2);
+  }
+  .refresh-btn:disabled {
+    opacity: 0.5;
   }
 </style>
