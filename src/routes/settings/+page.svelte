@@ -31,7 +31,13 @@
     updateMessage = '';
 
     try {
-      const release = await checkForUpdate();
+      const { release, error } = await checkForUpdate();
+
+      if (error) {
+        updateMessage = error;
+        return;
+      }
+
       if (!release) {
         updateMessage = '无法获取更新信息';
         return;

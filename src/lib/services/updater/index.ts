@@ -16,7 +16,6 @@ export interface ReleaseInfo {
 
 /** 获取当前版本 */
 export function getCurrentVersion(): string {
-  // 从构建时注入的版本号获取
   const version = import.meta.env.VITE_APP_VERSION || '0.0.0';
   console.log('[Updater] Current version:', version);
   return version;
@@ -31,37 +30,50 @@ export function compareVersions(current: string, latest: string): number {
   for (let i = 0; i < Math.max(currentParts.length, latestParts.length); i++) {
     const c = currentParts[i] || 0;
     const l = latestParts[i] || 0;
-    if (l > c) return 1;  // latest 更新
-    if (l < c) return -1; // current 更新
+    if (l > c) return 1;
+    if (l < c) return -1;
   }
   return 0;
 }
 
 /** 检查更新 */
-export async function checkForUpdate(): Promise<ReleaseInfo | null> {
+export async function checkForUpdate(): Promise<{ release: ReleaseInfo | null; error?: string }> {
   try {
+    console.log('[Updater] Checking:', GITHUB_API);
+
     const response = await fetch(GITHUB_API, {
       headers: {
         'Accept': 'application/vnd.github.v3+json'
       },
-      signal: AbortSignal.timeout(10000)
+      signal: AbortSignal.timeout(15000)
     });
 
+    console.log('[Updater] Response status:', response.status);
+
     if (!response.ok) {
-      console.error('Failed to check update:', response.status);
-      return null;
+      const errorText = await response.text().catch(() => '');
+      console.error('[Updater] API error:', response.status, errorText);
+      return { release: null, error: `API错误: ${response.status}` };
     }
 
     const data = await response.json();
+    console.log('[Updater] Release data:', { tag: data.tag_name, assets: data.assets?.length });
+
     const tagName = data.tag_name || '';
     const version = tagName.replace(/^v/, '');
+
+    if (!version) {
+      return { release: null, error: '无法解析版本号' };
+    }
 
     // 查找 APK 下载链接
     const apkAsset = data.assets?.find((a: any) =>
       a.name?.endsWith('.apk') || a.content_type === 'application/vnd.android.package-archive'
     );
 
-    return {
+    console.log('[Updater] APK asset:', apkAsset?.name || 'not found');
+
+    const release: ReleaseInfo = {
       version,
       tagName,
       body: data.body || '暂无更新日志',
@@ -69,57 +81,12 @@ export async function checkForUpdate(): Promise<ReleaseInfo | null> {
       apkUrl: apkAsset?.browser_download_url || data.html_url,
       apkSize: apkAsset?.size || 0
     };
-  } catch (error) {
-    console.error('Check update failed:', error);
-    return null;
+
+    return { release };
+  } catch (error: any) {
+    console.error('[Updater] Failed:', error.message);
+    return { release: null, error: `网络错误: ${error.message}` };
   }
-}
-
-/** 下载 APK */
-export async function downloadApk(url: string, onProgress?: (progress: number) => void): Promise<Blob | null> {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) return null;
-
-    const contentLength = response.headers.get('content-length');
-    const total = contentLength ? parseInt(contentLength) : 0;
-    let loaded = 0;
-
-    const reader = response.body?.getReader();
-    if (!reader) return null;
-
-    const chunks: Uint8Array[] = [];
-
-    while (true) {
-      const { done, value } = await reader.read();
-      if (done) break;
-
-      chunks.push(value);
-      loaded += value.length;
-
-      if (total > 0 && onProgress) {
-        onProgress(loaded / total);
-      }
-    }
-
-    return new Blob(chunks, { type: 'application/vnd.android.package-archive' });
-  } catch (error) {
-    console.error('Download failed:', error);
-    return null;
-  }
-}
-
-/** 安装 APK（需要 FileOpener 插件或使用系统 intent） */
-export function installApk(blob: Blob): void {
-  // 在浏览器中触发下载
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = 'DailyTech-latest.apk';
-  document.body.appendChild(a);
-  a.click();
-  document.body.removeChild(a);
-  URL.revokeObjectURL(url);
 }
 
 /** 格式化文件大小 */
@@ -131,12 +98,11 @@ export function formatFileSize(bytes: number): string {
 
 /** 格式化更新日志 */
 export function formatChangelog(body: string): string {
-  // 清理 markdown 格式，保留纯文本
   return body
-    .replace(/#{1,6}\s/g, '')  // 移除标题标记
-    .replace(/\*\*/g, '')      // 移除加粗
-    .replace(/\*/g, '')        // 移除斜体
-    .replace(/`/g, '')         // 移除代码标记
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')  // 链接只保留文字
+    .replace(/#{1,6}\s/g, '')
+    .replace(/\*\*/g, '')
+    .replace(/\*/g, '')
+    .replace(/`/g, '')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
     .trim();
 }
