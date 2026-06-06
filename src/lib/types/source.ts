@@ -18,6 +18,7 @@ export enum ContentTag {
   STARTUP = 'startup',
   CAREER = 'career',
   RESEARCH = 'research',
+  TECH_NEWS = 'technews',
   GENERAL = 'general'
 }
 
@@ -35,6 +36,7 @@ export const TAG_INFO: Record<ContentTag, { label: string; icon: string; keyword
   [ContentTag.STARTUP]: { label: '创业', icon: 'rocket', keywords: ['startup', 'funding', 'vc', 'venture', 'seed', 'series a', 'ipo', '创业', '融资'] },
   [ContentTag.CAREER]: { label: '职场', icon: 'briefcase', keywords: ['career', 'job', 'interview', 'salary', 'hiring', 'remote work', '职场', '面试', '招聘'] },
   [ContentTag.RESEARCH]: { label: '学术', icon: 'book-open', keywords: ['paper', 'research', 'arxiv', 'conference', 'journal', 'peer review', '论文', '研究'] },
+  [ContentTag.TECH_NEWS]: { label: '科技新闻', icon: 'rss', keywords: ['tech', 'news', 'startup', 'product', 'launch', '科技', '新闻'] },
   [ContentTag.GENERAL]: { label: '综合', icon: 'newspaper', keywords: [] }
 };
 

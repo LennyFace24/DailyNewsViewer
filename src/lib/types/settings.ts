@@ -24,6 +24,7 @@ export interface AIProviderConfig {
   name: string;
   description: string;
   baseUrlPlaceholder: string;
+  endpoint: string;
   defaultModel: string;
   modelsEndpoint: string;
   parseModels: (response: any) => string[];
@@ -38,6 +39,7 @@ export const AI_PROVIDERS: Record<AIProviderType, AIProviderConfig> = {
     name: 'Chat Completion',
     description: 'OpenAI / DeepSeek / 通义千问等',
     baseUrlPlaceholder: 'https://api.openai.com/v1',
+    endpoint: '/chat/completions',
     defaultModel: 'gpt-4o-mini',
     modelsEndpoint: '/models',
     parseModels: (res) => {
@@ -68,6 +70,7 @@ export const AI_PROVIDERS: Record<AIProviderType, AIProviderConfig> = {
     name: 'Response',
     description: 'OpenAI Response API (新版)',
     baseUrlPlaceholder: 'https://api.openai.com/v1',
+    endpoint: '/responses',
     defaultModel: 'gpt-4o-mini',
     modelsEndpoint: '/models',
     parseModels: (res) => {
@@ -104,6 +107,7 @@ export const AI_PROVIDERS: Record<AIProviderType, AIProviderConfig> = {
     name: 'Anthropic',
     description: 'Claude 系列模型',
     baseUrlPlaceholder: 'https://api.anthropic.com/v1',
+    endpoint: '/messages',
     defaultModel: 'claude-3-haiku-20240307',
     modelsEndpoint: '/models',
     parseModels: (res) => {
