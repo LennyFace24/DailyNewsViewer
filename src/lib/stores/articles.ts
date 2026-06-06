@@ -1,6 +1,6 @@
 import { writable, derived, get } from 'svelte/store';
 import type { Article, ArticleFilter, ArticleGroup } from '$lib/types/news';
-import { ArticleCache } from '$lib/services/storage';
+import { ArticleCache, BookmarkStorage } from '$lib/services/storage';
 import { groupArticlesByDate, formatDateGroup } from '$lib/utils/date';
 
 /** 所有文章池 */
@@ -93,11 +93,24 @@ export const bookmarkCount = derived(displayedArticles, ($articles) =>
 /** 加载缓存 */
 export function loadFromCache(): void {
   const cached = ArticleCache.loadRecent();
-  // 只保留最近2天的
-  const recent = filterRecentArticles(cached);
-  if (recent.length > 0) {
-    articles.set(recent);
-    // 初始加载第一批
+  const bookmarks = BookmarkStorage.loadAll();
+
+  // 合并缓存和收藏数据
+  const merged = new Map<string, Article>();
+  for (const a of cached) merged.set(a.id, a);
+  for (const b of bookmarks) {
+    if (!merged.has(b.id)) {
+      merged.set(b.id, { ...b, isBookmarked: true });
+    } else {
+      // 确保收藏状态正确
+      const existing = merged.get(b.id)!;
+      merged.set(b.id, { ...existing, isBookmarked: true });
+    }
+  }
+
+  const result = Array.from(merged.values());
+  if (result.length > 0) {
+    articles.set(result);
     loadMoreArticles();
   }
 }
@@ -172,12 +185,30 @@ export function markAllAsRead(): void {
 
 /** 切换收藏 */
 export function toggleBookmark(articleId: string): void {
+  let isNowBookmarked = false;
+
   displayedArticles.update(list =>
-    list.map(a => a.id === articleId ? { ...a, isBookmarked: !a.isBookmarked } : a)
+    list.map(a => {
+      if (a.id === articleId) {
+        isNowBookmarked = !a.isBookmarked;
+        return { ...a, isBookmarked: isNowBookmarked };
+      }
+      return a;
+    })
   );
   articles.update(list =>
-    list.map(a => a.id === articleId ? { ...a, isBookmarked: !a.isBookmarked } : a)
+    list.map(a => a.id === articleId ? { ...a, isBookmarked: isNowBookmarked } : a)
   );
+
+  // 同步到独立的收藏存储
+  const article = get(articles).find(a => a.id === articleId);
+  if (article) {
+    if (isNowBookmarked) {
+      BookmarkStorage.save({ ...article, isBookmarked: true });
+    } else {
+      BookmarkStorage.remove(articleId);
+    }
+  }
 }
 
 /** 保存到缓存 */
