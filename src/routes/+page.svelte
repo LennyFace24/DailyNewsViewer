@@ -9,6 +9,7 @@
   import RecommendedSection from '$lib/components/recommend/RecommendedSection.svelte';
   import LoadingSpinner from '$lib/components/shared/LoadingSpinner.svelte';
   import EmptyIllustration from '$lib/components/shared/EmptyIllustration.svelte';
+  import Chip from '$lib/components/shared/Chip.svelte';
   import {
     articles, filteredArticles, displayedArticles,
     addArticlesToPool, saveToCache, loadFromCache,
@@ -209,21 +210,15 @@
 
       <!-- 分类标签 -->
       <div class="flex gap-2 overflow-x-auto scrollbar-hide flex-1">
-        <button
-          class="tag-btn shrink-0 px-4 py-1.5 rounded-full text-sm font-medium {$selectedTag === null ? 'active' : ''}"
-          on:click={() => selectedTag.set(null)}
-        >
+        <Chip selected={$selectedTag === null} on:click={() => selectedTag.set(null)}>
           全部
-        </button>
+        </Chip>
         {#each availableTags as tag}
           {@const Icon = iconMap[TAG_INFO[tag]?.icon] || Newspaper}
-          <button
-            class="tag-btn shrink-0 px-4 py-1.5 rounded-full text-sm font-medium flex items-center gap-1.5 {$selectedTag === tag ? 'active' : ''}"
-            on:click={() => selectedTag.set(tag)}
-          >
+          <Chip selected={$selectedTag === tag} on:click={() => selectedTag.set(tag)}>
             <Icon class="w-3.5 h-3.5" />
             {TAG_INFO[tag]?.label || tag}
-          </button>
+          </Chip>
         {/each}
       </div>
     </div>
