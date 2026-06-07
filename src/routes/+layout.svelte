@@ -8,6 +8,7 @@
   import UpdateDialog from '$lib/components/shared/UpdateDialog.svelte';
   import NetworkStatus from '$lib/components/shared/NetworkStatus.svelte';
   import SplashScreen from '$lib/components/shared/SplashScreen.svelte';
+  import Onboarding from '$lib/components/shared/Onboarding.svelte';
   import { loadFromCache } from '$lib/stores/articles';
   import { checkForUpdate, getCurrentVersion, compareVersions } from '$lib/services/updater';
   import type { ReleaseInfo } from '$lib/services/updater';
@@ -18,6 +19,7 @@
   let showUpdateDialog = false;
   let latestRelease: ReleaseInfo | null = null;
   let showSplash = true;
+  let showOnboarding = false;
 
   $: currentPath = $page.url.pathname;
 
@@ -64,6 +66,12 @@
     // 2秒后隐藏启动画面
     setTimeout(() => {
       showSplash = false;
+
+      // 检查是否需要显示引导页
+      const onboardingDone = localStorage.getItem('dailytech_onboarding');
+      if (!onboardingDone) {
+        showOnboarding = true;
+      }
     }, 2000);
   });
 
@@ -93,5 +101,7 @@
       release={latestRelease}
       on:close={() => showUpdateDialog = false}
     />
+
+    <Onboarding bind:open={showOnboarding} />
   </div>
 {/if}
