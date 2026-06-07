@@ -10,6 +10,7 @@
   import LoadingSpinner from '$lib/components/shared/LoadingSpinner.svelte';
   import EmptyIllustration from '$lib/components/shared/EmptyIllustration.svelte';
   import Chip from '$lib/components/shared/Chip.svelte';
+  import Alert from '$lib/components/shared/Alert.svelte';
   import {
     articles, filteredArticles, displayedArticles,
     addArticlesToPool, saveToCache, loadFromCache,
@@ -244,6 +245,9 @@
 
     <!-- 错误状态 -->
     {:else if loadError && displayArticles.length === 0}
+      <div class="mb-4">
+        <Alert type="error" title="加载失败" message={loadError} dismissible on:dismiss={() => loadError = ''} />
+      </div>
       <EmptyIllustration type="error">
         <button class="refresh-btn px-6 py-2 mt-4" on:click={handleRefresh}>
           重试
