@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { ArrowLeft, ExternalLink, Bookmark, BookmarkCheck, Clock, User, Share2, Languages, Copy, Check, Settings, Timer } from 'lucide-svelte';
+  import { ArrowLeft, ExternalLink, Bookmark, BookmarkCheck, Clock, User, Copy, Check, Settings, Timer, Languages } from 'lucide-svelte';
   import type { Article } from '$lib/types/news';
   import { formatRelativeTime } from '$lib/utils/date';
   import { markAsRead, toggleBookmark } from '$lib/stores/articles';
@@ -9,11 +9,11 @@
   import { saveReadingProgress, getReadingProgress } from '$lib/stores/reading';
   import { readingQueue } from '$lib/stores/queue';
   import ReadingMode from '$lib/components/reading/ReadingMode.svelte';
-  import ShareDialog from '$lib/components/share/ShareDialog.svelte';
   import SwipeHint from '$lib/components/shared/SwipeHint.svelte';
   import Badge from '$lib/components/shared/Badge.svelte';
   import Avatar from '$lib/components/shared/Avatar.svelte';
   import Divider from '$lib/components/shared/Divider.svelte';
+  import { toast } from '$lib/stores/toast';
 
   export let article: Article;
   export let onBack: (() => void) | undefined = undefined;
@@ -25,7 +25,6 @@
   let scrollTimer: ReturnType<typeof setTimeout>;
   let containerEl: HTMLElement;
   let showReadingMode = false;
-  let showShareDialog = false;
   let showSwipeHint = true;
 
   $: isInQueue = $readingQueue.some(a => a.id === article.id);
@@ -64,14 +63,11 @@
     }, 500);
   }
 
-  function handleShare() {
-    if (navigator.share) {
-      navigator.share({ title: article.title, url: article.url });
-    } else {
-      navigator.clipboard.writeText(article.url);
-      copied = true;
-      setTimeout(() => copied = false, 2000);
-    }
+  function handleCopyLink() {
+    navigator.clipboard.writeText(article.url);
+    copied = true;
+    toast.success('链接已复制');
+    setTimeout(() => copied = false, 2000);
   }
 
   async function handleTranslate() {
@@ -144,8 +140,12 @@
             <Bookmark class="w-4 h-4" />
           {/if}
         </button>
-        <button class="icon-btn" on:click={() => showShareDialog = true}>
-          <Share2 class="w-4 h-4" />
+        <button class="icon-btn" on:click={handleCopyLink}>
+          {#if copied}
+            <Check class="w-4 h-4 text-green-400" />
+          {:else}
+            <Copy class="w-4 h-4" />
+          {/if}
         </button>
         <button class="icon-btn" on:click={() => window.open(article.url, '_blank')}>
           <ExternalLink class="w-4 h-4" />
@@ -221,8 +221,6 @@
 </div>
 
 <ReadingMode bind:open={showReadingMode} />
-
-<ShareDialog bind:open={showShareDialog} {article} />
 
 <SwipeHint show={showSwipeHint} direction="right" />
 

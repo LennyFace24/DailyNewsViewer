@@ -1,9 +1,13 @@
 <script lang="ts">
+  import { createEventDispatcher } from 'svelte';
+
   export let selected: boolean = false;
   export let variant: 'default' | 'outline' = 'default';
 
+  const dispatch = createEventDispatcher();
+
   function handleClick() {
-    selected = !selected;
+    dispatch('click');
   }
 </script>
 
