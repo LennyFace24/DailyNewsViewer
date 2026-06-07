@@ -1,7 +1,8 @@
 <script lang="ts">
   import { onMount } from 'svelte';
+  import { goto } from '$app/navigation';
   import { Skeleton } from '$lib/components/ui/skeleton/index.js';
-  import { RefreshCw, Brain, Shield, Globe, Smartphone, Gamepad2, Settings, Database, Code, Package, Rocket, Briefcase, BookOpen, Newspaper, AlertCircle, SlidersHorizontal } from 'lucide-svelte';
+  import { RefreshCw, Brain, Shield, Globe, Smartphone, Gamepad2, Settings, Database, Code, Package, Rocket, Briefcase, BookOpen, Newspaper, AlertCircle, SlidersHorizontal, Search } from 'lucide-svelte';
   import NewsList from '$lib/components/news/NewsList.svelte';
   import NewsFilter from '$lib/components/news/NewsFilter.svelte';
   import {
@@ -171,6 +172,14 @@
   <!-- 分类筛选栏 -->
   <div class="sticky top-0 z-40 glass" style="padding-top: env(safe-area-inset-top, 0px);">
     <div class="px-4 py-3 flex items-center gap-2">
+      <!-- 搜索按钮 -->
+      <button
+        class="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center bg-white/5 hover:bg-white/10 transition-colors"
+        on:click={() => goto('/search')}
+      >
+        <Search class="w-4 h-4" />
+      </button>
+
       <!-- 筛选按钮 -->
       <button
         class="shrink-0 w-9 h-9 rounded-lg flex items-center justify-center bg-white/5 hover:bg-white/10 transition-colors"
