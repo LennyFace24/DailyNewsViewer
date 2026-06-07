@@ -51,32 +51,45 @@ export function compareVersions(current: string, latest: string): number {
   return 0;
 }
 
-/** 通过代理获取 */
-async function fetchWithProxy(url: string): Promise<any> {
-  // 先尝试直接请求
-  try {
-    const response = await fetch(url, {
-      headers: { 'Accept': 'application/vnd.github.v3+json' },
-      signal: AbortSignal.timeout(10000)
-    });
-    if (response.ok) {
-      return await response.json();
-    }
-  } catch {}
+/** 通过代理获取（带重试） */
+async function fetchWithProxy(url: string, maxRetries: number = 3): Promise<any> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    console.log(`[Updater] Attempt ${attempt}/${maxRetries}`);
 
-  // 尝试代理
-  for (const proxy of CORS_PROXIES) {
+    // 先尝试直接请求
     try {
-      const response = await fetch(proxy + encodeURIComponent(url), {
+      const response = await fetch(url, {
+        headers: { 'Accept': 'application/vnd.github.v3+json' },
         signal: AbortSignal.timeout(10000)
       });
       if (response.ok) {
         return await response.json();
       }
-    } catch {}
+    } catch (e) {
+      console.log('[Updater] Direct fetch failed:', e);
+    }
+
+    // 尝试代理
+    for (const proxy of CORS_PROXIES) {
+      try {
+        const response = await fetch(proxy + encodeURIComponent(url), {
+          signal: AbortSignal.timeout(10000)
+        });
+        if (response.ok) {
+          return await response.json();
+        }
+      } catch (e) {
+        console.log('[Updater] Proxy failed:', proxy, e);
+      }
+    }
+
+    // 等待后重试
+    if (attempt < maxRetries) {
+      await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+    }
   }
 
-  throw new Error('无法获取更新信息');
+  throw new Error('无法获取更新信息（已重试' + maxRetries + '次）');
 }
 
 /** 检查更新 */
