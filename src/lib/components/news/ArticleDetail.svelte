@@ -10,6 +10,7 @@
   import { readingQueue } from '$lib/stores/queue';
   import ReadingMode from '$lib/components/reading/ReadingMode.svelte';
   import ShareDialog from '$lib/components/share/ShareDialog.svelte';
+  import SwipeHint from '$lib/components/shared/SwipeHint.svelte';
 
   export let article: Article;
   export let onBack: (() => void) | undefined = undefined;
@@ -22,6 +23,7 @@
   let containerEl: HTMLElement;
   let showReadingMode = false;
   let showShareDialog = false;
+  let showSwipeHint = true;
 
   $: isInQueue = $readingQueue.some(a => a.id === article.id);
 
@@ -218,6 +220,8 @@
 <ReadingMode bind:open={showReadingMode} />
 
 <ShareDialog bind:open={showShareDialog} {article} />
+
+<SwipeHint show={showSwipeHint} direction="right" />
 
 <style>
   .icon-btn {
