@@ -1,20 +1,20 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { page } from '$app/stores';
-  import { Home, Bookmark, Compass, Settings, Github } from 'lucide-svelte';
   import { queueCount } from '$lib/stores/queue';
   import Tooltip from '$lib/components/shared/Tooltip.svelte';
+  import Icon from '$lib/components/shared/Icon.svelte';
 
   const dispatch = createEventDispatcher();
 
   $: currentPath = $page.url.pathname;
 
   const navItems = [
-    { path: '/', icon: Home, label: '首页' },
-    { path: '/discover', icon: Compass, label: '发现' },
-    { path: '/trending', icon: Github, label: 'Trending' },
-    { path: '/bookmarks', icon: Bookmark, label: '收藏' },
-    { path: '/settings', icon: Settings, label: '设置' }
+    { path: '/', iconName: 'Home', label: '首页' },
+    { path: '/discover', iconName: 'Compass', label: '发现' },
+    { path: '/trending', iconName: 'Github', label: 'Trending' },
+    { path: '/bookmarks', iconName: 'Bookmark', label: '收藏' },
+    { path: '/settings', iconName: 'Settings', label: '设置' }
   ];
 </script>
 
@@ -26,7 +26,7 @@
           href={item.path}
           class="nav-item {currentPath === item.path ? 'active' : ''}"
         >
-          <svelte:component this={item.icon} class="w-5 h-5" />
+          <Icon name={item.iconName} />
           <span>{item.label}</span>
         </a>
       </Tooltip>
