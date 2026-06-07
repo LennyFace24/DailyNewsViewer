@@ -10,6 +10,7 @@
   import SplashScreen from '$lib/components/shared/SplashScreen.svelte';
   import Onboarding from '$lib/components/shared/Onboarding.svelte';
   import QuickActions from '$lib/components/shared/QuickActions.svelte';
+  import ToastContainer from '$lib/components/shared/ToastContainer.svelte';
   import { loadFromCache } from '$lib/stores/articles';
   import { checkForUpdate, getCurrentVersion, compareVersions } from '$lib/services/updater';
   import type { ReleaseInfo } from '$lib/services/updater';
@@ -107,5 +108,7 @@
     <Onboarding bind:open={showOnboarding} />
 
     <QuickActions bind:open={showQuickActions} />
+
+    <ToastContainer />
   </div>
 {/if}
