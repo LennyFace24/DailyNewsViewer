@@ -12,6 +12,7 @@
   import AboutDialog from '$lib/components/shared/AboutDialog.svelte';
   import ConfirmDialog from '$lib/components/shared/ConfirmDialog.svelte';
   import Progress from '$lib/components/shared/Progress.svelte';
+  import Switch from '$lib/components/shared/Switch.svelte';
   import { onMount } from 'svelte';
 
   $: unreadCount = $articles.filter(a => !a.isRead).length;
@@ -84,9 +85,10 @@
             <div class="setting-label">启用代理</div>
             <div class="setting-desc">通过代理服务器访问网络</div>
           </div>
-          <div class="toggle" class:active={$settings.proxyEnabled} on:click={() => updateSetting('proxyEnabled', !$settings.proxyEnabled)}>
-            <div class="toggle-thumb" class:active={$settings.proxyEnabled} />
-          </div>
+          <Switch
+            checked={$settings.proxyEnabled}
+            on:click={() => updateSetting('proxyEnabled', !$settings.proxyEnabled)}
+          />
         </div>
 
         {#if $settings.proxyEnabled}
@@ -152,9 +154,10 @@
             <div class="setting-label">推送通知</div>
             <div class="setting-desc">新文章到达时通知</div>
           </div>
-          <div class="toggle" class:active={$settings.notificationsEnabled} on:click={() => updateSetting('notificationsEnabled', !$settings.notificationsEnabled)}>
-            <div class="toggle-thumb" class:active={$settings.notificationsEnabled} />
-          </div>
+          <Switch
+            checked={$settings.notificationsEnabled}
+            on:click={() => updateSetting('notificationsEnabled', !$settings.notificationsEnabled)}
+          />
         </div>
 
         {#if $settings.notificationsEnabled}
@@ -182,9 +185,10 @@
                 <div class="text-sm">安静时间</div>
                 <div class="text-xs text-muted-foreground">在此期间不发送通知</div>
               </div>
-              <div class="toggle" class:active={$settings.quietHoursEnabled} on:click={() => updateSetting('quietHoursEnabled', !$settings.quietHoursEnabled)}>
-                <div class="toggle-thumb" class:active={$settings.quietHoursEnabled} />
-              </div>
+              <Switch
+                checked={$settings.quietHoursEnabled}
+                on:click={() => updateSetting('quietHoursEnabled', !$settings.quietHoursEnabled)}
+              />
             </div>
 
             {#if $settings.quietHoursEnabled}
@@ -240,15 +244,17 @@
       <div class="glass-card overflow-hidden">
         <div class="setting-row">
           <div class="setting-label">显示图片</div>
-          <div class="toggle" class:active={$settings.showImages} on:click={() => updateSetting('showImages', !$settings.showImages)}>
-            <div class="toggle-thumb" class:active={$settings.showImages} />
-          </div>
+          <Switch
+            checked={$settings.showImages}
+            on:click={() => updateSetting('showImages', !$settings.showImages)}
+          />
         </div>
         <div class="setting-row">
           <div class="setting-label">自动标记已读</div>
-          <div class="toggle" class:active={$settings.markAsReadOnView} on:click={() => updateSetting('markAsReadOnView', !$settings.markAsReadOnView)}>
-            <div class="toggle-thumb" class:active={$settings.markAsReadOnView} />
-          </div>
+          <Switch
+            checked={$settings.markAsReadOnView}
+            on:click={() => updateSetting('markAsReadOnView', !$settings.markAsReadOnView)}
+          />
         </div>
       </div>
     </section>
