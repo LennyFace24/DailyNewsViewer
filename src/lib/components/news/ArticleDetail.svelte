@@ -8,6 +8,7 @@
   import { translateArticle } from '$lib/services/translate';
   import { saveReadingProgress, getReadingProgress } from '$lib/stores/reading';
   import ReadingMode from '$lib/components/reading/ReadingMode.svelte';
+  import ShareDialog from '$lib/components/share/ShareDialog.svelte';
 
   export let article: Article;
   export let onBack: (() => void) | undefined = undefined;
@@ -19,6 +20,7 @@
   let scrollTimer: ReturnType<typeof setTimeout>;
   let containerEl: HTMLElement;
   let showReadingMode = false;
+  let showShareDialog = false;
 
   onMount(() => {
     markAsRead(article.id);
@@ -123,12 +125,8 @@
             <Bookmark class="w-4 h-4" />
           {/if}
         </button>
-        <button class="icon-btn" on:click={handleShare}>
-          {#if copied}
-            <Check class="w-4 h-4 text-green-400" />
-          {:else}
-            <Share2 class="w-4 h-4" />
-          {/if}
+        <button class="icon-btn" on:click={() => showShareDialog = true}>
+          <Share2 class="w-4 h-4" />
         </button>
         <button class="icon-btn" on:click={() => window.open(article.url, '_blank')}>
           <ExternalLink class="w-4 h-4" />
@@ -204,6 +202,8 @@
 </div>
 
 <ReadingMode bind:open={showReadingMode} />
+
+<ShareDialog bind:open={showShareDialog} {article} />
 
 <style>
   .icon-btn {
