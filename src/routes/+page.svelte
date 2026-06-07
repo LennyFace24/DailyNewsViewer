@@ -8,6 +8,7 @@
   import NewsFilter from '$lib/components/news/NewsFilter.svelte';
   import RecommendedSection from '$lib/components/recommend/RecommendedSection.svelte';
   import LoadingSpinner from '$lib/components/shared/LoadingSpinner.svelte';
+  import EmptyIllustration from '$lib/components/shared/EmptyIllustration.svelte';
   import {
     articles, filteredArticles, displayedArticles,
     addArticlesToPool, saveToCache, loadFromCache,
@@ -248,23 +249,19 @@
 
     <!-- 错误状态 -->
     {:else if loadError && displayArticles.length === 0}
-      <div class="flex flex-col items-center justify-center py-20">
-        <AlertCircle class="w-12 h-12 text-muted-foreground mb-4" />
-        <p class="text-muted-foreground mb-4">{loadError}</p>
-        <button class="refresh-btn px-6 py-2" on:click={handleRefresh}>
+      <EmptyIllustration type="error">
+        <button class="refresh-btn px-6 py-2 mt-4" on:click={handleRefresh}>
           重试
         </button>
-      </div>
+      </EmptyIllustration>
 
     <!-- 空状态 -->
     {:else if displayArticles.length === 0}
-      <div class="flex flex-col items-center justify-center py-20">
-        <Newspaper class="w-12 h-12 text-muted-foreground mb-4" />
-        <p class="text-muted-foreground mb-4">暂无内容</p>
-        <button class="refresh-btn px-6 py-2" on:click={handleRefresh}>
+      <EmptyIllustration type="empty">
+        <button class="refresh-btn px-6 py-2 mt-4" on:click={handleRefresh}>
           刷新
         </button>
-      </div>
+      </EmptyIllustration>
 
     <!-- 内容列表 -->
     {:else}
