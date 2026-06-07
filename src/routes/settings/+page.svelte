@@ -8,6 +8,7 @@
   import type { ReleaseInfo } from '$lib/services/updater';
   import { readingStats, clearReadingProgress, loadReadingProgress } from '$lib/stores/reading';
   import UpdateDialog from '$lib/components/shared/UpdateDialog.svelte';
+  import ExportDialog from '$lib/components/shared/ExportDialog.svelte';
   import { onMount } from 'svelte';
 
   $: unreadCount = $articles.filter(a => !a.isRead).length;
@@ -20,6 +21,7 @@
   let showClearDialog = false;
   let showResetDialog = false;
   let showUpdateDialog = false;
+  let showExportDialog = false;
   let latestRelease: ReleaseInfo | null = null;
   let isCheckingUpdate = false;
   let updateMessage = '';
@@ -284,6 +286,10 @@
           <CheckCheck class="w-4 h-4 text-muted-foreground" />
           <span>全部标为已读</span>
         </div>
+        <div class="action-row" on:click={() => showExportDialog = true}>
+          <Download class="w-4 h-4 text-muted-foreground" />
+          <span>导出数据</span>
+        </div>
         <div class="action-row" on:click={() => showClearDialog = true}>
           <Trash2 class="w-4 h-4 text-muted-foreground" />
           <span>清除缓存</span>
@@ -359,6 +365,9 @@
   release={latestRelease}
   on:close={() => showUpdateDialog = false}
 />
+
+<!-- 导出弹窗 -->
+<ExportDialog bind:open={showExportDialog} />
 
 <style>
   .section-title {
