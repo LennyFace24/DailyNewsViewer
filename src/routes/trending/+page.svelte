@@ -30,6 +30,11 @@
     { value: 'monthly', label: '本月' },
   ];
 
+  function handleImageError(e: Event) {
+    const img = e.target as HTMLImageElement;
+    img.style.display = 'none';
+  }
+
   onMount(() => {
     loadTrending();
   });
@@ -112,32 +117,45 @@
             href={repo.url}
             target="_blank"
             rel="noopener"
-            class="repo-card glass-card block p-4 hover:border-white/15 transition-colors"
+            class="repo-card glass-card block overflow-hidden hover:border-white/15 transition-colors"
           >
-            <div class="flex items-start justify-between gap-3">
-              <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 mb-1">
-                  <span class="text-primary font-mono text-sm font-medium truncate">
-                    {repo.title}
-                  </span>
-                </div>
-                <p class="text-sm text-muted-foreground line-clamp-2 mb-3">
-                  {repo.summary}
-                </p>
-                <div class="flex items-center gap-4 text-xs text-muted-foreground">
-                  {#if repo.tags[0]}
-                    <span class="flex items-center gap-1">
-                      <span class="w-2.5 h-2.5 rounded-full bg-primary/50" />
-                      {repo.tags[0]}
-                    </span>
-                  {/if}
-                  <span class="flex items-center gap-1">
-                    <Star class="w-3.5 h-3.5" />
-                    {repo.tags[1] || '0 stars'}
-                  </span>
-                </div>
+            {#if repo.thumbnail}
+              <div class="repo-image">
+                <img
+                  src={repo.thumbnail}
+                  alt={repo.title}
+                  loading="lazy"
+                  class="w-full h-32 object-cover"
+                  on:error={handleImageError}
+                />
               </div>
-              <ExternalLink class="w-4 h-4 text-muted-foreground shrink-0 mt-1" />
+            {/if}
+            <div class="p-4">
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="text-primary font-mono text-sm font-medium truncate">
+                      {repo.title}
+                    </span>
+                  </div>
+                  <p class="text-sm text-muted-foreground line-clamp-2 mb-3">
+                    {repo.summary}
+                  </p>
+                  <div class="flex items-center gap-4 text-xs text-muted-foreground">
+                    {#if repo.tags[0]}
+                      <span class="flex items-center gap-1">
+                        <span class="w-2.5 h-2.5 rounded-full bg-primary/50" />
+                        {repo.tags[0]}
+                      </span>
+                    {/if}
+                    <span class="flex items-center gap-1">
+                      <Star class="w-3.5 h-3.5" />
+                      {repo.tags[1] || '0 stars'}
+                    </span>
+                  </div>
+                </div>
+                <ExternalLink class="w-4 h-4 text-muted-foreground shrink-0 mt-1" />
+              </div>
             </div>
           </a>
         {/each}
