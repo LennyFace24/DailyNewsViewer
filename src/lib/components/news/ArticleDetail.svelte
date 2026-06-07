@@ -1,12 +1,13 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { ArrowLeft, ExternalLink, Bookmark, BookmarkCheck, Clock, User, Share2, Languages, Copy, Check } from 'lucide-svelte';
+  import { ArrowLeft, ExternalLink, Bookmark, BookmarkCheck, Clock, User, Share2, Languages, Copy, Check, Settings } from 'lucide-svelte';
   import type { Article } from '$lib/types/news';
   import { formatRelativeTime } from '$lib/utils/date';
   import { markAsRead, toggleBookmark } from '$lib/stores/articles';
   import { settings } from '$lib/stores/settings';
   import { translateArticle } from '$lib/services/translate';
   import { saveReadingProgress, getReadingProgress } from '$lib/stores/reading';
+  import ReadingMode from '$lib/components/reading/ReadingMode.svelte';
 
   export let article: Article;
   export let onBack: (() => void) | undefined = undefined;
@@ -17,6 +18,7 @@
   let copied = false;
   let scrollTimer: ReturnType<typeof setTimeout>;
   let containerEl: HTMLElement;
+  let showReadingMode = false;
 
   onMount(() => {
     markAsRead(article.id);
@@ -106,6 +108,9 @@
         <span class="text-xs px-2.5 py-1 rounded-full bg-white/10 font-medium">{article.sourceName}</span>
       </div>
       <div class="flex items-center gap-1">
+        <button class="icon-btn" on:click={() => showReadingMode = true}>
+          <Settings class="w-4 h-4" />
+        </button>
         {#if $settings.aiTranslateEnabled}
           <button class="icon-btn" on:click={handleTranslate} disabled={isTranslating}>
             <Languages class="w-4 h-4 {isTranslating ? 'animate-pulse' : ''} {showTranslated ? 'text-primary' : ''}" />
@@ -197,6 +202,8 @@
     </div>
   </article>
 </div>
+
+<ReadingMode bind:open={showReadingMode} />
 
 <style>
   .icon-btn {
