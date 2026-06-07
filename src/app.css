@@ -67,6 +67,8 @@
     break-inside: avoid;
     margin-bottom: 0.75rem;
     contain: layout style;
+    max-width: 100%;
+    overflow: hidden;
   }
 
   /* 毛玻璃效果 */

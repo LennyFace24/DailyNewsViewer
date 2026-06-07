@@ -90,7 +90,23 @@ function stripHtml(html: string): string {
 }
 
 function decode(text: string): string {
-  const el = document.createElement('textarea');
-  el.innerHTML = text;
-  return el.value;
+  const namedEntities: Record<string, string> = {
+    amp: '&',
+    lt: '<',
+    gt: '>',
+    quot: '"',
+    apos: "'",
+    nbsp: ' '
+  };
+
+  return text.replace(/&(#x?[0-9a-fA-F]+|[a-zA-Z]+);/g, (match, entity: string) => {
+    if (entity[0] === '#') {
+      const isHex = entity[1]?.toLowerCase() === 'x';
+      const num = parseInt(entity.slice(isHex ? 2 : 1), isHex ? 16 : 10);
+      return Number.isFinite(num) ? String.fromCodePoint(num) : match;
+    }
+
+    const decoded = namedEntities[entity];
+    return decoded !== undefined ? decoded : match;
+  });
 }

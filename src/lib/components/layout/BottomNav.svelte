@@ -1,7 +1,7 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { page } from '$app/stores';
-  import { Home, Bookmark, Compass, Settings, Clock } from 'lucide-svelte';
+  import { Home, Bookmark, Compass, Settings, Github } from 'lucide-svelte';
   import { queueCount } from '$lib/stores/queue';
   import Tooltip from '$lib/components/shared/Tooltip.svelte';
 
@@ -12,7 +12,7 @@
   const navItems = [
     { path: '/', icon: Home, label: '首页' },
     { path: '/discover', icon: Compass, label: '发现' },
-    { path: '/queue', icon: Clock, label: '稍后' },
+    { path: '/trending', icon: Github, label: 'Trending' },
     { path: '/bookmarks', icon: Bookmark, label: '收藏' },
     { path: '/settings', icon: Settings, label: '设置' }
   ];
