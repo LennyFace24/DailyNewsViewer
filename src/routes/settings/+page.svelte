@@ -15,6 +15,7 @@
   import Switch from '$lib/components/shared/Switch.svelte';
   import TabBar from '$lib/components/shared/TabBar.svelte';
   import Dropdown from '$lib/components/shared/Dropdown.svelte';
+  import ScrollArea from '$lib/components/shared/ScrollArea.svelte';
   import { onMount } from 'svelte';
 
   $: unreadCount = $articles.filter(a => !a.isRead).length;
