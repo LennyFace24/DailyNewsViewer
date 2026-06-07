@@ -6,6 +6,7 @@
   import { createGestureHandler } from '$lib/utils/gesture';
   import NewsList from '$lib/components/news/NewsList.svelte';
   import NewsFilter from '$lib/components/news/NewsFilter.svelte';
+  import RecommendedSection from '$lib/components/recommend/RecommendedSection.svelte';
   import {
     articles, filteredArticles, displayedArticles,
     addArticlesToPool, saveToCache, loadFromCache,
@@ -228,6 +229,11 @@
 
   <!-- 内容区 -->
   <div class="px-4 py-4">
+    <!-- 推荐阅读 -->
+    {#if !isFirstLoad && !$selectedTag}
+      <RecommendedSection />
+    {/if}
+
     <!-- 首次加载骨架屏 -->
     {#if isFirstLoad && isRefreshing}
       <div class="space-y-4">
