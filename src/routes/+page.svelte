@@ -18,7 +18,8 @@
   import { getArticleCategory } from '$lib/services/classifier';
   import { ContentTag, TAG_INFO } from '$lib/types/source';
 
-  const TOTAL_LIMIT = 100;
+  const TOTAL_LIMIT = 30; // 减少初始加载量
+  const INITIAL_LIMIT = 5; // 首次加载每个源只拉取5条
 
   let isRefreshing = false;
   let isLoadingMore = false;
@@ -85,7 +86,7 @@
     return `${d.getMonth() + 1}月${d.getDate()}日`;
   }
 
-  async function fetchAllSources() {
+  async function fetchAllSources(isInitialLoad = false) {
     loadError = '';
     const sources = $enabledSources;
 
@@ -94,20 +95,22 @@
       return;
     }
 
+    const limit = isInitialLoad ? INITIAL_LIMIT : TOTAL_LIMIT;
     let allArticles: any[] = [];
 
     // 拉取RSS源
     try {
-      const results = await fetchMultipleSources(sources, TOTAL_LIMIT);
+      const results = await fetchMultipleSources(sources, limit);
       allArticles = Array.from(results.values()).flat();
     } catch (e) {
       console.error('RSS fetch failed:', e);
     }
 
-    // 拉取Hacker News
+    // 拉取Hacker News（限制数量）
     if (sources.some(s => s.id === 'hackernews')) {
       try {
-        const hn = await fetchHackerNewsTopStories(30);
+        const hnLimit = isInitialLoad ? 5 : 15;
+        const hn = await fetchHackerNewsTopStories(hnLimit);
         allArticles.push(...hn);
       } catch (e) {
         console.error('HN fetch failed:', e);
@@ -129,14 +132,13 @@
     loadError = '';
 
     try {
-      await fetchAllSources();
+      await fetchAllSources(false); // 手动刷新拉取更多
       refreshArticles();
     } catch (error) {
       console.error('Refresh failed:', error);
       loadError = '刷新失败，请稍后重试';
     } finally {
       isRefreshing = false;
-      isFirstLoad = false;
     }
   }
 
@@ -164,10 +166,17 @@
     // 如果有缓存，先显示缓存
     if ($articles.length > 0) {
       isFirstLoad = false;
+      return; // 有缓存就不自动刷新
     }
 
-    // 无论是否有缓存，都尝试刷新
-    await handleRefresh();
+    // 首次加载，限制数量
+    isRefreshing = true;
+    try {
+      await fetchAllSources(true);
+    } finally {
+      isRefreshing = false;
+      isFirstLoad = false;
+    }
   });
 
   onDestroy(() => {
