@@ -12,6 +12,7 @@
   import ShareDialog from '$lib/components/share/ShareDialog.svelte';
   import SwipeHint from '$lib/components/shared/SwipeHint.svelte';
   import Badge from '$lib/components/shared/Badge.svelte';
+  import Avatar from '$lib/components/shared/Avatar.svelte';
 
   export let article: Article;
   export let onBack: (() => void) | undefined = undefined;
@@ -158,10 +159,10 @@
 
     <!-- 元信息 -->
     <div class="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-6">
-      <span class="flex items-center gap-1.5">
-        <User class="w-4 h-4" />
-        {article.author}
-      </span>
+      <div class="flex items-center gap-2">
+        <Avatar size="sm" fallback={article.author.charAt(0).toUpperCase()} />
+        <span>{article.author}</span>
+      </div>
       <span class="flex items-center gap-1.5">
         <Clock class="w-4 h-4" />
         {formatRelativeTime(article.publishedAt)}
