@@ -1,11 +1,12 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { ArrowLeft, ExternalLink, Bookmark, BookmarkCheck, Clock, User, Share2, Languages, Copy, Check } from 'lucide-svelte';
   import type { Article } from '$lib/types/news';
   import { formatRelativeTime } from '$lib/utils/date';
   import { markAsRead, toggleBookmark } from '$lib/stores/articles';
   import { settings } from '$lib/stores/settings';
   import { translateArticle } from '$lib/services/translate';
+  import { saveReadingProgress, getReadingProgress } from '$lib/stores/reading';
 
   export let article: Article;
   export let onBack: (() => void) | undefined = undefined;
@@ -14,10 +15,34 @@
   let isTranslating = false;
   let showTranslated = false;
   let copied = false;
+  let scrollTimer: ReturnType<typeof setTimeout>;
+  let containerEl: HTMLElement;
 
   onMount(() => {
     markAsRead(article.id);
+
+    // 恢复阅读进度
+    const progress = getReadingProgress(article.id);
+    if (progress && progress.scrollPosition > 100) {
+      setTimeout(() => {
+        window.scrollTo(0, progress.scrollPosition);
+      }, 100);
+    }
   });
+
+  onDestroy(() => {
+    if (scrollTimer) clearTimeout(scrollTimer);
+  });
+
+  function handleScroll() {
+    clearTimeout(scrollTimer);
+    scrollTimer = setTimeout(() => {
+      const scrollY = window.scrollY;
+      const docHeight = document.documentElement.scrollHeight - window.innerHeight;
+      const percentage = docHeight > 0 ? Math.round((scrollY / docHeight) * 100) : 0;
+      saveReadingProgress(article.id, scrollY, percentage);
+    }, 500);
+  }
 
   function handleShare() {
     if (navigator.share) {
@@ -67,7 +92,9 @@
   }
 </script>
 
-<div class="min-h-screen bg-background">
+<svelte:window on:scroll={handleScroll} />
+
+<div class="min-h-screen bg-background" bind:this={containerEl}>
   <header class="sticky top-0 z-50 glass" style="padding-top: env(safe-area-inset-top, 0px);">
     <div class="flex items-center justify-between px-4 h-12">
       <div class="flex items-center gap-2">

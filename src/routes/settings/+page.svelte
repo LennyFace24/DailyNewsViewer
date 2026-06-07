@@ -1,15 +1,21 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { Globe, Layout, Eye, CheckCheck, Trash2, RotateCcw, Info, Languages, Download } from 'lucide-svelte';
+  import { Globe, Layout, Eye, CheckCheck, Trash2, RotateCcw, Info, Languages, Download, BookOpen, BarChart3 } from 'lucide-svelte';
   import { settings, updateSetting, resetSettings } from '$lib/stores/settings';
   import { articles, markAllAsRead } from '$lib/stores/articles';
   import { ArticleCache } from '$lib/services/storage';
   import { checkForUpdate, getCurrentVersion, compareVersions } from '$lib/services/updater';
   import type { ReleaseInfo } from '$lib/services/updater';
+  import { readingStats, clearReadingProgress, loadReadingProgress } from '$lib/stores/reading';
   import UpdateDialog from '$lib/components/shared/UpdateDialog.svelte';
+  import { onMount } from 'svelte';
 
   $: unreadCount = $articles.filter(a => !a.isRead).length;
   $: bookmarkCount = $articles.filter(a => a.isBookmarked).length;
+
+  onMount(() => {
+    loadReadingProgress();
+  });
 
   let showClearDialog = false;
   let showResetDialog = false;
@@ -165,6 +171,27 @@
           <div class="setting-label">自动标记已读</div>
           <div class="toggle" class:active={$settings.markAsReadOnView} on:click={() => updateSetting('markAsReadOnView', !$settings.markAsReadOnView)}>
             <div class="toggle-thumb" class:active={$settings.markAsReadOnView} />
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 阅读统计 -->
+    <section class="mb-6">
+      <h2 class="section-title"><BarChart3 class="w-3.5 h-3.5" /> 阅读统计</h2>
+      <div class="glass-card overflow-hidden">
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-value">{$readingStats.todayCount}</div>
+            <div class="stat-label">今日阅读</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{$readingStats.weekCount}</div>
+            <div class="stat-label">本周阅读</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{$readingStats.totalCount}</div>
+            <div class="stat-label">总计阅读</div>
           </div>
         </div>
       </div>
@@ -388,6 +415,37 @@
     font-size: 13px;
     color: rgba(255, 255, 255, 0.5);
     text-align: center;
+  }
+
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  .stat-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px 16px;
+    background: rgba(15, 15, 15, 0.8);
+  }
+
+  .stat-value {
+    font-size: 28px;
+    font-weight: 700;
+    color: white;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .stat-label {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
   }
 
   .reset-btn {
