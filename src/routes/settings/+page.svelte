@@ -14,6 +14,7 @@
   import Progress from '$lib/components/shared/Progress.svelte';
   import Switch from '$lib/components/shared/Switch.svelte';
   import TabBar from '$lib/components/shared/TabBar.svelte';
+  import Dropdown from '$lib/components/shared/Dropdown.svelte';
   import { onMount } from 'svelte';
 
   $: unreadCount = $articles.filter(a => !a.isRead).length;
@@ -96,16 +97,15 @@
           <div class="p-4 space-y-3 border-t border-white/5">
             <div>
               <label class="input-label">代理类型</label>
-              <div class="flex gap-2">
-                {#each ['http', 'https', 'socks5'] as type}
-                  <button
-                    class="option-btn {$settings.proxyType === type ? 'active' : ''}"
-                    on:click={() => updateSetting('proxyType', type)}
-                  >
-                    {type.toUpperCase()}
-                  </button>
-                {/each}
-              </div>
+              <Dropdown
+                options={[
+                  { value: 'http', label: 'HTTP' },
+                  { value: 'https', label: 'HTTPS' },
+                  { value: 'socks5', label: 'SOCKS5' }
+                ]}
+                value={$settings.proxyType}
+                on:change={(e) => updateSetting('proxyType', e.detail.value)}
+              />
             </div>
             <div class="flex gap-3">
               <div class="flex-1">
