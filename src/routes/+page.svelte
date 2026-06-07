@@ -1,8 +1,9 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
   import { goto } from '$app/navigation';
   import { Skeleton } from '$lib/components/ui/skeleton/index.js';
   import { RefreshCw, Brain, Shield, Globe, Smartphone, Gamepad2, Settings, Database, Code, Package, Rocket, Briefcase, BookOpen, Newspaper, AlertCircle, SlidersHorizontal, Search } from 'lucide-svelte';
+  import { createGestureHandler } from '$lib/utils/gesture';
   import NewsList from '$lib/components/news/NewsList.svelte';
   import NewsFilter from '$lib/components/news/NewsFilter.svelte';
   import {
@@ -155,6 +156,8 @@
     }
   }
 
+  let gestureCleanup: (() => void) | null = null;
+
   onMount(async () => {
     loadFromCache();
 
@@ -165,6 +168,10 @@
 
     // 无论是否有缓存，都尝试刷新
     await handleRefresh();
+  });
+
+  onDestroy(() => {
+    gestureCleanup?.();
   });
 </script>
 
