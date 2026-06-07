@@ -267,6 +267,10 @@
             <div class="stat-label">总计阅读</div>
           </div>
         </div>
+        <div class="action-row" on:click={() => goto('/stats')}>
+          <BarChart3 class="w-4 h-4 text-muted-foreground" />
+          <span>查看详细统计</span>
+        </div>
       </div>
     </section>
 
