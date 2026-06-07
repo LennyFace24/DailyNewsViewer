@@ -10,7 +10,7 @@
   import UpdateDialog from '$lib/components/shared/UpdateDialog.svelte';
   import ExportDialog from '$lib/components/shared/ExportDialog.svelte';
   import AboutDialog from '$lib/components/shared/AboutDialog.svelte';
-  import ConfirmDialog from '$lib/components/shared/ConfirmDialog.svelte';
+  import Dialog from '$lib/components/shared/Dialog.svelte';
   import Progress from '$lib/components/shared/Progress.svelte';
   import Switch from '$lib/components/shared/Switch.svelte';
   import TabBar from '$lib/components/shared/TabBar.svelte';
@@ -344,24 +344,20 @@
 </div>
 
 <!-- 清除缓存弹窗 -->
-<ConfirmDialog
-  bind:open={showClearDialog}
-  title="清除缓存"
-  message="确定要清除缓存吗？收藏内容不会丢失。"
-  confirmText="清除"
-  type="danger"
-  on:confirm={clearCache}
-/>
+<Dialog bind:open={showClearDialog} title="清除缓存" description="确定要清除缓存吗？收藏内容不会丢失。">
+  <div class="flex gap-3">
+    <button class="secondary-btn flex-1" on:click={() => showClearDialog = false}>取消</button>
+    <button class="danger-btn flex-1" on:click={clearCache}>清除</button>
+  </div>
+</Dialog>
 
 <!-- 恢复默认弹窗 -->
-<ConfirmDialog
-  bind:open={showResetDialog}
-  title="恢复默认设置"
-  message="确定要恢复所有设置为默认值吗？"
-  confirmText="恢复"
-  type="warning"
-  on:confirm={resetSettings}
-/>
+<Dialog bind:open={showResetDialog} title="恢复默认设置" description="确定要恢复所有设置为默认值吗？">
+  <div class="flex gap-3">
+    <button class="secondary-btn flex-1" on:click={() => showResetDialog = false}>取消</button>
+    <button class="warning-btn flex-1" on:click={resetSettings}>恢复</button>
+  </div>
+</Dialog>
 
 <!-- 更新弹窗 -->
 <UpdateDialog
@@ -628,5 +624,37 @@
   }
   .secondary-btn:active {
     background: rgba(255, 255, 255, 0.15);
+  }
+
+  .danger-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(239, 68, 68, 0.2);
+    color: rgb(239, 68, 68);
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .danger-btn:active {
+    background: rgba(239, 68, 68, 0.3);
+  }
+
+  .warning-btn {
+    flex: 1;
+    padding: 12px;
+    border-radius: 12px;
+    background: rgba(234, 179, 8, 0.2);
+    color: rgb(234, 179, 8);
+    font-size: 14px;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .warning-btn:active {
+    background: rgba(234, 179, 8, 0.3);
   }
 </style>
