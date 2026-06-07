@@ -9,6 +9,7 @@
   import { readingStats, clearReadingProgress, loadReadingProgress } from '$lib/stores/reading';
   import UpdateDialog from '$lib/components/shared/UpdateDialog.svelte';
   import ExportDialog from '$lib/components/shared/ExportDialog.svelte';
+  import AboutDialog from '$lib/components/shared/AboutDialog.svelte';
   import { onMount } from 'svelte';
 
   $: unreadCount = $articles.filter(a => !a.isRead).length;
@@ -22,6 +23,7 @@
   let showResetDialog = false;
   let showUpdateDialog = false;
   let showExportDialog = false;
+  let showAboutDialog = false;
   let latestRelease: ReleaseInfo | null = null;
   let isCheckingUpdate = false;
   let updateMessage = '';
@@ -305,9 +307,12 @@
     <section class="mb-6">
       <h2 class="section-title"><Info class="w-3.5 h-3.5" /> 关于</h2>
       <div class="glass-card overflow-hidden">
-        <div class="setting-row">
-          <div class="setting-label">当前版本</div>
-          <div class="setting-value">v{currentVersion}</div>
+        <div class="setting-row" on:click={() => showAboutDialog = true}>
+          <div>
+            <div class="setting-label">关于 DailyTech</div>
+            <div class="setting-desc">v{currentVersion}</div>
+          </div>
+          <div class="text-white/30">›</div>
         </div>
         <div class="action-row" on:click={handleCheckUpdate}>
           <Download class="w-4 h-4 text-muted-foreground" />
@@ -372,6 +377,9 @@
 
 <!-- 导出弹窗 -->
 <ExportDialog bind:open={showExportDialog} />
+
+<!-- 关于弹窗 -->
+<AboutDialog bind:open={showAboutDialog} version={currentVersion} />
 
 <style>
   .section-title {
