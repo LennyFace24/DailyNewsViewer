@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { Bookmark, BookmarkCheck, Clock, User } from 'lucide-svelte';
+  import { Bookmark, BookmarkCheck, Clock, User, Brain, Shield, Globe, Smartphone, Gamepad2, Settings, Database, Code, Package, Rocket, Briefcase, BookOpen, Newspaper, Rss } from 'lucide-svelte';
   import type { Article } from '$lib/types/news';
   import { ContentTag, TAG_INFO } from '$lib/types/source';
   import { getArticleCategory } from '$lib/services/classifier';
@@ -15,9 +15,17 @@
   let imageLoaded = false;
   let imageError = false;
 
+  const iconMap: Record<string, any> = {
+    brain: Brain, shield: Shield, globe: Globe, smartphone: Smartphone,
+    'gamepad-2': Gamepad2, settings: Settings, database: Database, code: Code,
+    package: Package, rocket: Rocket, briefcase: Briefcase, 'book-open': BookOpen,
+    newspaper: Newspaper, rss: Rss
+  };
+
   $: isCompact = $settings.cardStyle === 'compact';
   $: isSpacious = $settings.cardStyle === 'spacious';
   $: tag = getArticleCategory(article);
+  $: TagIcon = iconMap[TAG_INFO[tag]?.icon] || Newspaper;
 
   function handleClick() {
     goto(`/article/${encodeURIComponent(article.id)}`);
@@ -49,8 +57,9 @@
 
         <!-- 标签 -->
         <div class="absolute top-3 left-3">
-          <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-black/40 backdrop-blur-md border border-white/10">
-            {TAG_INFO[tag].icon} {TAG_INFO[tag].label}
+          <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-black/40 backdrop-blur-md border border-white/10 flex items-center gap-1">
+            <svelte:component this={TagIcon} class="w-3 h-3" />
+            {TAG_INFO[tag]?.label || '综合'}
           </span>
         </div>
 
@@ -71,8 +80,9 @@
     <div class="p-4 {isCompact ? 'p-3' : isSpacious ? 'p-5' : 'p-4'}">
       {#if !article.thumbnail || !$settings.showImages || imageError}
         <div class="flex items-center justify-between mb-3">
-          <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-white/5 border border-white/10">
-            {TAG_INFO[tag].icon} {TAG_INFO[tag].label}
+          <span class="px-2.5 py-1 rounded-full text-xs font-medium bg-white/5 border border-white/10 flex items-center gap-1">
+            <svelte:component this={TagIcon} class="w-3 h-3" />
+            {TAG_INFO[tag]?.label || '综合'}
           </span>
           <button class="p-1 rounded-full hover:bg-white/5 transition-colors" on:click={handleBookmark}>
             {#if article.isBookmarked}
