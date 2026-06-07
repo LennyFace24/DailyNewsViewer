@@ -1,12 +1,14 @@
 <script lang="ts">
   import { page } from '$app/stores';
-  import { Home, Bookmark, Compass, Settings } from 'lucide-svelte';
+  import { Home, Bookmark, Compass, Settings, Clock } from 'lucide-svelte';
+  import { queueCount } from '$lib/stores/queue';
 
   $: currentPath = $page.url.pathname;
 
   const navItems = [
     { path: '/', icon: Home, label: '首页' },
     { path: '/discover', icon: Compass, label: '发现' },
+    { path: '/queue', icon: Clock, label: '稍后' },
     { path: '/bookmarks', icon: Bookmark, label: '收藏' },
     { path: '/settings', icon: Settings, label: '设置' }
   ];

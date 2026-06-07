@@ -1,12 +1,13 @@
 <script lang="ts">
   import { onMount, onDestroy } from 'svelte';
-  import { ArrowLeft, ExternalLink, Bookmark, BookmarkCheck, Clock, User, Share2, Languages, Copy, Check, Settings } from 'lucide-svelte';
+  import { ArrowLeft, ExternalLink, Bookmark, BookmarkCheck, Clock, User, Share2, Languages, Copy, Check, Settings, Timer } from 'lucide-svelte';
   import type { Article } from '$lib/types/news';
   import { formatRelativeTime } from '$lib/utils/date';
   import { markAsRead, toggleBookmark } from '$lib/stores/articles';
   import { settings } from '$lib/stores/settings';
   import { translateArticle } from '$lib/services/translate';
   import { saveReadingProgress, getReadingProgress } from '$lib/stores/reading';
+  import { readingQueue } from '$lib/stores/queue';
   import ReadingMode from '$lib/components/reading/ReadingMode.svelte';
   import ShareDialog from '$lib/components/share/ShareDialog.svelte';
 
@@ -21,6 +22,16 @@
   let containerEl: HTMLElement;
   let showReadingMode = false;
   let showShareDialog = false;
+
+  $: isInQueue = $readingQueue.some(a => a.id === article.id);
+
+  function toggleQueue() {
+    if (isInQueue) {
+      readingQueue.remove(article.id);
+    } else {
+      readingQueue.add(article);
+    }
+  }
 
   onMount(() => {
     markAsRead(article.id);
@@ -110,6 +121,9 @@
         <span class="text-xs px-2.5 py-1 rounded-full bg-white/10 font-medium">{article.sourceName}</span>
       </div>
       <div class="flex items-center gap-1">
+        <button class="icon-btn" on:click={toggleQueue}>
+          <Timer class="w-4 h-4 {isInQueue ? 'text-primary' : ''}" />
+        </button>
         <button class="icon-btn" on:click={() => showReadingMode = true}>
           <Settings class="w-4 h-4" />
         </button>
