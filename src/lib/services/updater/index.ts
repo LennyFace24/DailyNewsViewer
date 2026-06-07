@@ -1,4 +1,6 @@
 import { Capacitor } from '@capacitor/core';
+import { Filesystem, Directory } from '@capacitor/filesystem';
+import { FileOpener } from '@capacitor-community/file-opener';
 
 const GITHUB_OWNER = 'LennyFace24';
 const GITHUB_REPO = 'DailyNewsViewer';
@@ -18,6 +20,13 @@ export interface ReleaseInfo {
   publishedAt: string;
   apkUrl: string;
   apkSize: number;
+}
+
+/** 下载进度 */
+export interface DownloadProgress {
+  loaded: number;
+  total: number;
+  percentage: number;
 }
 
 /** 获取当前版本 */
@@ -99,6 +108,90 @@ export async function checkForUpdate(): Promise<{ release: ReleaseInfo | null; e
   } catch (error: any) {
     return { release: null, error: error.message };
   }
+}
+
+/** 下载 APK 并安装（应用内） */
+export async function downloadAndInstall(
+  url: string,
+  onProgress?: (progress: DownloadProgress) => void
+): Promise<void> {
+  if (!Capacitor.isNativePlatform()) {
+    window.open(url, '_blank');
+    return;
+  }
+
+  try {
+    // 1. 下载文件
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('下载失败');
+
+    const contentLength = response.headers.get('content-length');
+    const total = contentLength ? parseInt(contentLength) : 0;
+    let loaded = 0;
+
+    const reader = response.body?.getReader();
+    if (!reader) throw new Error('无法读取响应');
+
+    const chunks: Uint8Array[] = [];
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      chunks.push(value);
+      loaded += value.length;
+
+      if (onProgress) {
+        onProgress({
+          loaded,
+          total,
+          percentage: total > 0 ? Math.round((loaded / total) * 100) : 0
+        });
+      }
+    }
+
+    // 2. 合并为 Blob
+    const blob = new Blob(chunks, { type: 'application/vnd.android.package-archive' });
+
+    // 3. 转换为 Base64
+    const base64 = await blobToBase64(blob);
+
+    // 4. 保存到缓存目录
+    const fileName = `DailyTech-${Date.now()}.apk`;
+    const result = await Filesystem.writeFile({
+      path: fileName,
+      data: base64,
+      directory: Directory.Cache
+    });
+
+    // 5. 获取原生文件路径
+    const fileUri = result.uri;
+    const nativePath = fileUri.replace('file://', '');
+
+    // 6. 打开安装
+    await FileOpener.open({
+      filePath: nativePath,
+      contentType: 'application/vnd.android.package-archive'
+    });
+  } catch (error: any) {
+    console.error('Download/install failed:', error);
+    // 降级到浏览器下载
+    window.open(url, '_blank');
+  }
+}
+
+/** Blob 转 Base64 */
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const dataUrl = reader.result as string;
+      const base64 = dataUrl.split(',')[1];
+      resolve(base64);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
 }
 
 /** 格式化文件大小 */

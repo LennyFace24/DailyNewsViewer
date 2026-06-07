@@ -1,8 +1,8 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
   import { Download, X } from 'lucide-svelte';
-  import type { ReleaseInfo } from '$lib/services/updater';
-  import { formatFileSize, formatChangelog } from '$lib/services/updater';
+  import type { ReleaseInfo, DownloadProgress } from '$lib/services/updater';
+  import { formatFileSize, formatChangelog, downloadAndInstall } from '$lib/services/updater';
 
   export let open = false;
   export let release: ReleaseInfo | null = null;
@@ -29,48 +29,12 @@
     downloadProgress = 0;
 
     try {
-      // 直接下载APK
-      const response = await fetch(release.apkUrl);
-      if (!response.ok) throw new Error('Download failed');
-
-      const contentLength = response.headers.get('content-length');
-      const total = contentLength ? parseInt(contentLength) : 0;
-      let loaded = 0;
-
-      const reader = response.body?.getReader();
-      if (!reader) throw new Error('No reader');
-
-      const chunks: Uint8Array[] = [];
-
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        chunks.push(value);
-        loaded += value.length;
-
-        if (total > 0) {
-          downloadProgress = loaded / total;
-        }
-      }
-
-      // 创建下载链接
-      const blob = new Blob(chunks, { type: 'application/vnd.android.package-archive' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `DailyTech-${release.tagName}.apk`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
+      await downloadAndInstall(release.apkUrl, (progress) => {
+        downloadProgress = progress.percentage / 100;
+      });
       close();
     } catch (error) {
       console.error('Download failed:', error);
-      // 失败时打开GitHub页面
-      window.open(release.apkUrl, '_blank');
-      close();
     } finally {
       isDownloading = false;
     }
