@@ -1,60 +1,56 @@
 <script lang="ts">
   export let checked: boolean = false;
   export let disabled: boolean = false;
-  export let size: 'sm' | 'md' = 'md';
-
-  const sizes = {
-    sm: { track: 'w-9 h-5', thumb: 'w-4 h-4', translate: 'translate-x-4' },
-    md: { track: 'w-11 h-6', thumb: 'w-5 h-5', translate: 'translate-x-5' }
-  };
-
-  function toggle() {
-    if (!disabled) {
-      checked = !checked;
-    }
-  }
 </script>
 
 <button
-  class="switch {sizes[size].track} {checked ? 'active' : ''} {disabled ? 'disabled' : ''}"
-  on:click={toggle}
+  class="switch {checked ? 'active' : ''}"
+  {disabled}
+  on:click
   role="switch"
   aria-checked={checked}
-  {disabled}
 >
-  <span class="thumb {sizes[size].thumb} {checked ? sizes[size].translate : ''}" />
+  <span class="thumb" />
 </button>
 
 <style>
   .switch {
     position: relative;
-    display: inline-flex;
-    align-items: center;
-    border-radius: 100px;
+    width: 44px;
+    height: 24px;
+    border-radius: 12px;
     background: rgba(255, 255, 255, 0.1);
     border: none;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: background 0.2s ease;
     padding: 2px;
+    flex-shrink: 0;
   }
 
   .switch.active {
-    background: rgba(255, 255, 255, 0.25);
+    background: rgba(255, 255, 255, 0.3);
   }
 
-  .switch.disabled {
+  .switch:disabled {
     opacity: 0.5;
     cursor: not-allowed;
   }
 
-  .switch:active:not(.disabled) {
-    background: rgba(255, 255, 255, 0.15);
+  .switch:active:not(:disabled) {
+    transform: scale(0.95);
   }
 
   .thumb {
+    display: block;
+    width: 20px;
+    height: 20px;
+    border-radius: 10px;
     background: white;
-    border-radius: 50%;
     transition: transform 0.2s ease;
-    transform: translateX(0);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
+  }
+
+  .switch.active .thumb {
+    transform: translateX(20px);
   }
 </style>

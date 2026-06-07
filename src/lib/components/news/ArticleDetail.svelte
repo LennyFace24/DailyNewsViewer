@@ -5,7 +5,7 @@
   import { formatRelativeTime } from '$lib/utils/date';
   import { markAsRead, toggleBookmark } from '$lib/stores/articles';
   import { settings } from '$lib/stores/settings';
-  import { translateArticle } from '$lib/services/translate';
+  import { translateTitle, translateArticle, translateContent } from '$lib/services/translate';
   import { saveReadingProgress, getReadingProgress } from '$lib/stores/reading';
   import { readingQueue } from '$lib/stores/queue';
   import ReadingMode from '$lib/components/reading/ReadingMode.svelte';
@@ -18,9 +18,13 @@
   export let article: Article;
   export let onBack: (() => void) | undefined = undefined;
 
+  // 翻译状态
+  let translatedTitle = '';
   let translatedSummary = '';
+  let translatedContent = '';
   let isTranslating = false;
   let showTranslated = false;
+
   let copied = false;
   let scrollTimer: ReturnType<typeof setTimeout>;
   let containerEl: HTMLElement;
@@ -76,7 +80,7 @@
       return;
     }
 
-    if (translatedSummary) {
+    if (translatedTitle) {
       showTranslated = true;
       return;
     }
@@ -85,10 +89,20 @@
 
     isTranslating = true;
     try {
-      translatedSummary = await translateArticle(article.summary);
+      // 并行翻译标题、摘要和内容
+      const [title, summary, content] = await Promise.all([
+        translateTitle(article.title),
+        translateArticle(article.summary),
+        article.content ? translateContent(article.content) : Promise.resolve('')
+      ]);
+
+      translatedTitle = title;
+      translatedSummary = summary;
+      translatedContent = content;
       showTranslated = true;
     } catch (error) {
       console.error('Translation failed:', error);
+      toast.error('翻译失败');
     } finally {
       isTranslating = false;
     }
@@ -156,7 +170,9 @@
 
   <article class="max-w-3xl mx-auto px-4 py-6">
     <!-- 标题 -->
-    <h1 class="text-2xl md:text-3xl font-bold leading-tight mb-4">{article.title}</h1>
+    <h1 class="text-2xl md:text-3xl font-bold leading-tight mb-4">
+      {showTranslated ? translatedTitle : article.title}
+    </h1>
 
     <!-- 元信息 -->
     <div class="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-6">
@@ -201,14 +217,16 @@
 
     <!-- 正文内容 -->
     <div class="article-content">
-      {#if article.content}
+      {#if showTranslated && translatedContent}
+        {@html processContent(translatedContent)}
+      {:else if article.content}
         {@html processContent(article.content)}
       {:else}
         <p class="text-muted-foreground leading-relaxed">{article.summary}</p>
       {/if}
     </div>
 
-    <div class="separator" />
+    <Divider />
 
     <!-- 底部操作 -->
     <div class="flex flex-col items-center gap-4 py-8">
@@ -219,10 +237,6 @@
     </div>
   </article>
 </div>
-
-<ReadingMode bind:open={showReadingMode} />
-
-<SwipeHint show={showSwipeHint} direction="right" />
 
 <style>
   .icon-btn {
@@ -244,12 +258,6 @@
   }
   .icon-btn:disabled {
     opacity: 0.5;
-  }
-
-  .separator {
-    height: 1px;
-    background: rgba(255, 255, 255, 0.06);
-    margin: 24px 0;
   }
 
   .primary-btn {
@@ -282,18 +290,13 @@
     max-width: 100%;
     height: auto;
     border-radius: 12px;
-    margin: 20px 0;
-    background: rgba(255, 255, 255, 0.05);
+    margin: 16px 0;
   }
 
   :global(.article-content a) {
     color: rgba(255, 255, 255, 0.9);
     text-decoration: underline;
     text-underline-offset: 4px;
-    transition: color 0.2s;
-  }
-  :global(.article-content a:hover) {
-    color: white;
   }
 
   :global(.article-content pre) {
@@ -303,8 +306,7 @@
     border-radius: 12px;
     overflow-x: auto;
     font-size: 13px;
-    line-height: 1.6;
-    margin: 20px 0;
+    margin: 16px 0;
   }
 
   :global(.article-content code) {
@@ -312,46 +314,20 @@
     padding: 2px 6px;
     border-radius: 4px;
     font-size: 0.9em;
-    font-family: 'SF Mono', 'Fira Code', monospace;
-  }
-
-  :global(.article-content pre code) {
-    background: transparent;
-    padding: 0;
-    font-size: 13px;
   }
 
   :global(.article-content blockquote) {
-    border-left: 3px solid rgba(255, 255, 255, 0.3);
+    border-left: 3px solid rgba(255, 255, 255, 0.2);
     padding: 12px 16px;
-    margin: 20px 0;
-    background: rgba(255, 255, 255, 0.03);
+    margin: 16px 0;
+    background: rgba(255, 255, 255, 0.02);
     border-radius: 0 8px 8px 0;
     color: rgba(255, 255, 255, 0.7);
   }
 
-  :global(.article-content h1) {
-    font-size: 1.8em;
-    font-weight: 700;
-    margin: 32px 0 16px;
-  }
-
-  :global(.article-content h2) {
-    font-size: 1.5em;
-    font-weight: 600;
-    margin: 28px 0 12px;
-  }
-
-  :global(.article-content h3) {
-    font-size: 1.25em;
+  :global(.article-content h2, .article-content h3, .article-content h4) {
     font-weight: 600;
     margin: 24px 0 12px;
-  }
-
-  :global(.article-content h4) {
-    font-size: 1.1em;
-    font-weight: 600;
-    margin: 20px 0 8px;
   }
 
   :global(.article-content p) {
@@ -370,49 +346,17 @@
   :global(.article-content table) {
     width: 100%;
     border-collapse: collapse;
-    margin: 20px 0;
-    font-size: 14px;
+    margin: 16px 0;
   }
 
   :global(.article-content th, .article-content td) {
     border: 1px solid rgba(255, 255, 255, 0.1);
-    padding: 10px 12px;
+    padding: 10px;
     text-align: left;
   }
 
   :global(.article-content th) {
     background: rgba(255, 255, 255, 0.05);
     font-weight: 600;
-  }
-
-  :global(.article-content tr:hover) {
-    background: rgba(255, 255, 255, 0.02);
-  }
-
-  :global(.article-content hr) {
-    border: none;
-    height: 1px;
-    background: rgba(255, 255, 255, 0.1);
-    margin: 24px 0;
-  }
-
-  :global(.article-content figure) {
-    margin: 20px 0;
-    text-align: center;
-  }
-
-  :global(.article-content figcaption) {
-    font-size: 13px;
-    color: rgba(255, 255, 255, 0.5);
-    margin-top: 8px;
-  }
-
-  :global(.article-content strong, .article-content b) {
-    font-weight: 600;
-    color: white;
-  }
-
-  :global(.article-content em, .article-content i) {
-    font-style: italic;
   }
 </style>

@@ -57,13 +57,37 @@ export async function translateText(text: string): Promise<string> {
   }
 }
 
+/** 翻译标题 */
+export async function translateTitle(title: string): Promise<string> {
+  if (!title || title.length < 2) return title;
+  return await translateText(`Translate to Chinese: ${title}`);
+}
+
 /** 翻译文章摘要 */
 export async function translateArticle(text: string): Promise<string> {
   if (!text || text.length < 10) return text;
 
-  // 只翻译前500字符
+  // 翻译前500字符
   const toTranslate = text.substring(0, 500);
-  const translated = await translateText(toTranslate);
+  const translated = await translateText(`Translate to Chinese, keep the original meaning:\n\n${toTranslate}`);
+
+  return translated;
+}
+
+/** 翻译文章内容（HTML） */
+export async function translateContent(html: string): Promise<string> {
+  if (!html || html.length < 20) return html;
+
+  // 提取纯文本进行翻译
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = html;
+  const textContent = tempDiv.textContent || '';
+
+  if (textContent.length < 20) return html;
+
+  // 翻译前1000字符
+  const toTranslate = textContent.substring(0, 1000);
+  const translated = await translateText(`Translate to Chinese, keep the original meaning:\n\n${toTranslate}`);
 
   return translated;
 }
