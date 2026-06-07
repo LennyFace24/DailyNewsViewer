@@ -13,6 +13,7 @@
   import SwipeHint from '$lib/components/shared/SwipeHint.svelte';
   import Badge from '$lib/components/shared/Badge.svelte';
   import Avatar from '$lib/components/shared/Avatar.svelte';
+  import Divider from '$lib/components/shared/Divider.svelte';
 
   export let article: Article;
   export let onBack: (() => void) | undefined = undefined;
@@ -182,7 +183,7 @@
       </div>
     {/if}
 
-    <div class="separator" />
+    <Divider />
 
     <!-- 摘要 -->
     {#if article.summary}
