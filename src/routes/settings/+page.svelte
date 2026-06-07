@@ -16,6 +16,7 @@
   import TabBar from '$lib/components/shared/TabBar.svelte';
   import Dropdown from '$lib/components/shared/Dropdown.svelte';
   import ScrollArea from '$lib/components/shared/ScrollArea.svelte';
+  import Collapsible from '$lib/components/shared/Collapsible.svelte';
   import { onMount } from 'svelte';
 
   $: unreadCount = $articles.filter(a => !a.isRead).length;
@@ -95,19 +96,20 @@
         </div>
 
         {#if $settings.proxyEnabled}
-          <div class="p-4 space-y-3 border-t border-white/5">
-            <div>
-              <label class="input-label">代理类型</label>
-              <Dropdown
-                options={[
-                  { value: 'http', label: 'HTTP' },
-                  { value: 'https', label: 'HTTPS' },
-                  { value: 'socks5', label: 'SOCKS5' }
-                ]}
-                value={$settings.proxyType}
-                on:change={(e) => updateSetting('proxyType', e.detail.value)}
-              />
-            </div>
+          <Collapsible title="代理配置" open={true}>
+            <div class="space-y-3">
+              <div>
+                <label class="input-label">代理类型</label>
+                <Dropdown
+                  options={[
+                    { value: 'http', label: 'HTTP' },
+                    { value: 'https', label: 'HTTPS' },
+                    { value: 'socks5', label: 'SOCKS5' }
+                  ]}
+                  value={$settings.proxyType}
+                  on:change={(e) => updateSetting('proxyType', e.detail.value)}
+                />
+              </div>
             <div class="flex gap-3">
               <div class="flex-1">
                 <label class="input-label">主机</label>
@@ -128,7 +130,7 @@
                 />
               </div>
             </div>
-          </div>
+          </Collapsible>
         {/if}
       </div>
     </section>
