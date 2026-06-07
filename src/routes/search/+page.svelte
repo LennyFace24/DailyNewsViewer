@@ -3,6 +3,7 @@
   import { ArrowLeft, Clock, Trash2 } from 'lucide-svelte';
   import SearchBar from '$lib/components/search/SearchBar.svelte';
   import SearchResults from '$lib/components/search/SearchResults.svelte';
+  import Kbd from '$lib/components/shared/Kbd.svelte';
   import { articles } from '$lib/stores/articles';
   import type { Article } from '$lib/types/news';
 
@@ -113,6 +114,21 @@
             {tag}
           </button>
         {/each}
+      </div>
+    </div>
+
+    <!-- 快捷键提示 -->
+    <div class="px-4 py-4">
+      <h3 class="text-sm font-medium text-muted-foreground mb-3">快捷键</h3>
+      <div class="space-y-2">
+        <div class="flex items-center gap-3">
+          <Kbd key="Enter" />
+          <span class="text-sm text-muted-foreground">搜索</span>
+        </div>
+        <div class="flex items-center gap-3">
+          <Kbd key="Esc" />
+          <span class="text-sm text-muted-foreground">清除搜索</span>
+        </div>
       </div>
     </div>
   {:else}
