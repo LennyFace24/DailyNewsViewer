@@ -82,9 +82,11 @@ function extractFirstImage(html: string): string | undefined {
 }
 
 function stripHtml(html: string): string {
-  const tmp = document.createElement('div');
-  tmp.innerHTML = html;
-  return tmp.textContent || tmp.innerText || '';
+  const withoutScriptAndStyle = html
+    .replace(/<script[\s\S]*?>[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[\s\S]*?>[\s\S]*?<\/style>/gi, '');
+  const withoutTags = withoutScriptAndStyle.replace(/<[^>]*>/g, ' ');
+  return decode(withoutTags).replace(/\s+/g, ' ').trim();
 }
 
 function decode(text: string): string {
