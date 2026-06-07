@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from 'svelte';
-  import { ArrowLeft, ExternalLink, Bookmark, BookmarkCheck, Clock, User, Share2, Languages } from 'lucide-svelte';
+  import { ArrowLeft, ExternalLink, Bookmark, BookmarkCheck, Clock, User, Share2, Languages, Copy, Check } from 'lucide-svelte';
   import type { Article } from '$lib/types/news';
   import { formatRelativeTime } from '$lib/utils/date';
   import { markAsRead, toggleBookmark } from '$lib/stores/articles';
@@ -13,6 +13,7 @@
   let translatedSummary = '';
   let isTranslating = false;
   let showTranslated = false;
+  let copied = false;
 
   onMount(() => {
     markAsRead(article.id);
@@ -23,6 +24,8 @@
       navigator.share({ title: article.title, url: article.url });
     } else {
       navigator.clipboard.writeText(article.url);
+      copied = true;
+      setTimeout(() => copied = false, 2000);
     }
   }
 
@@ -49,6 +52,19 @@
       isTranslating = false;
     }
   }
+
+  function processContent(html: string): string {
+    // 处理图片懒加载
+    let processed = html.replace(/<img([^>]*)>/gi, (match, attrs) => {
+      if (attrs.includes('loading=')) return match;
+      return `<img${attrs} loading="lazy" decoding="async">`;
+    });
+
+    // 处理链接在新窗口打开
+    processed = processed.replace(/<a([^>]*)href=/gi, '<a$1 target="_blank" rel="noopener" href=');
+
+    return processed;
+  }
 </script>
 
 <div class="min-h-screen bg-background">
@@ -60,7 +76,7 @@
             <ArrowLeft class="w-4 h-4" />
           </button>
         {/if}
-        <span class="text-xs px-2 py-1 rounded-full bg-white/10">{article.sourceName}</span>
+        <span class="text-xs px-2.5 py-1 rounded-full bg-white/10 font-medium">{article.sourceName}</span>
       </div>
       <div class="flex items-center gap-1">
         {#if $settings.aiTranslateEnabled}
@@ -76,7 +92,11 @@
           {/if}
         </button>
         <button class="icon-btn" on:click={handleShare}>
-          <Share2 class="w-4 h-4" />
+          {#if copied}
+            <Check class="w-4 h-4 text-green-400" />
+          {:else}
+            <Share2 class="w-4 h-4" />
+          {/if}
         </button>
         <button class="icon-btn" on:click={() => window.open(article.url, '_blank')}>
           <ExternalLink class="w-4 h-4" />
@@ -86,16 +106,31 @@
   </header>
 
   <article class="max-w-3xl mx-auto px-4 py-6">
-    <h1 class="text-2xl font-bold leading-tight mb-4">{article.title}</h1>
+    <!-- 标题 -->
+    <h1 class="text-2xl md:text-3xl font-bold leading-tight mb-4">{article.title}</h1>
 
-    <div class="flex items-center gap-4 text-sm text-muted-foreground mb-6">
-      <span class="flex items-center gap-1"><User class="w-4 h-4" />{article.author}</span>
-      <span class="flex items-center gap-1"><Clock class="w-4 h-4" />{formatRelativeTime(article.publishedAt)}</span>
+    <!-- 元信息 -->
+    <div class="flex flex-wrap items-center gap-4 text-sm text-muted-foreground mb-6">
+      <span class="flex items-center gap-1.5">
+        <User class="w-4 h-4" />
+        {article.author}
+      </span>
+      <span class="flex items-center gap-1.5">
+        <Clock class="w-4 h-4" />
+        {formatRelativeTime(article.publishedAt)}
+      </span>
     </div>
 
+    <!-- 封面图 -->
     {#if article.thumbnail}
-      <div class="mb-6 rounded-xl overflow-hidden">
-        <img src={article.thumbnail} alt={article.title} class="w-full h-auto" loading="lazy" />
+      <div class="mb-6 rounded-xl overflow-hidden bg-white/5">
+        <img
+          src={article.thumbnail}
+          alt={article.title}
+          class="w-full h-auto max-h-[500px] object-cover"
+          loading="lazy"
+          decoding="async"
+        />
       </div>
     {/if}
 
@@ -108,28 +143,30 @@
           {showTranslated ? translatedSummary : article.summary}
         </p>
         {#if showTranslated}
-          <button class="text-xs text-primary mt-2" on:click={() => showTranslated = false}>
+          <button class="text-xs text-primary mt-2 hover:underline" on:click={() => showTranslated = false}>
             显示原文
           </button>
         {/if}
       </div>
     {/if}
 
-    <!-- 正文 -->
+    <!-- 正文内容 -->
     <div class="article-content">
       {#if article.content}
-        {@html article.content}
+        {@html processContent(article.content)}
       {:else}
-        <p class="text-muted-foreground">{article.summary}</p>
+        <p class="text-muted-foreground leading-relaxed">{article.summary}</p>
       {/if}
     </div>
 
     <div class="separator" />
 
-    <div class="flex justify-center py-8">
+    <!-- 底部操作 -->
+    <div class="flex flex-col items-center gap-4 py-8">
       <button class="primary-btn" on:click={() => window.open(article.url, '_blank')}>
         阅读原文 <ExternalLink class="w-4 h-4 ml-2" />
       </button>
+      <p class="text-xs text-muted-foreground">来源: {article.sourceName}</p>
     </div>
   </article>
 </div>
@@ -165,7 +202,7 @@
   .primary-btn {
     display: flex;
     align-items: center;
-    padding: 12px 24px;
+    padding: 12px 28px;
     border-radius: 100px;
     background: rgba(255, 255, 255, 0.12);
     color: white;
@@ -173,10 +210,11 @@
     font-weight: 500;
     border: none;
     cursor: pointer;
-    transition: background 0.2s;
+    transition: all 0.2s;
   }
   .primary-btn:active {
     background: rgba(255, 255, 255, 0.2);
+    transform: scale(0.98);
   }
 
   /* 文章内容样式 */
@@ -184,54 +222,144 @@
     line-height: 1.8;
     color: rgba(255, 255, 255, 0.9);
     word-break: break-word;
+    font-size: 16px;
   }
+
   :global(.article-content img) {
     max-width: 100%;
     height: auto;
     border-radius: 12px;
-    margin: 16px 0;
+    margin: 20px 0;
+    background: rgba(255, 255, 255, 0.05);
   }
+
   :global(.article-content a) {
     color: rgba(255, 255, 255, 0.9);
     text-decoration: underline;
     text-underline-offset: 4px;
+    transition: color 0.2s;
   }
+  :global(.article-content a:hover) {
+    color: white;
+  }
+
   :global(.article-content pre) {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.1);
     padding: 16px;
     border-radius: 12px;
     overflow-x: auto;
     font-size: 13px;
-    margin: 16px 0;
+    line-height: 1.6;
+    margin: 20px 0;
   }
+
   :global(.article-content code) {
-    background: rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.08);
     padding: 2px 6px;
     border-radius: 4px;
-    font-size: 13px;
+    font-size: 0.9em;
+    font-family: 'SF Mono', 'Fira Code', monospace;
   }
+
   :global(.article-content pre code) {
     background: transparent;
     padding: 0;
+    font-size: 13px;
   }
+
   :global(.article-content blockquote) {
-    border-left: 3px solid rgba(255, 255, 255, 0.2);
-    padding-left: 16px;
-    margin: 16px 0;
-    color: rgba(255, 255, 255, 0.6);
+    border-left: 3px solid rgba(255, 255, 255, 0.3);
+    padding: 12px 16px;
+    margin: 20px 0;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 0 8px 8px 0;
+    color: rgba(255, 255, 255, 0.7);
   }
-  :global(.article-content h2, .article-content h3, .article-content h4) {
+
+  :global(.article-content h1) {
+    font-size: 1.8em;
+    font-weight: 700;
+    margin: 32px 0 16px;
+  }
+
+  :global(.article-content h2) {
+    font-size: 1.5em;
+    font-weight: 600;
+    margin: 28px 0 12px;
+  }
+
+  :global(.article-content h3) {
+    font-size: 1.25em;
     font-weight: 600;
     margin: 24px 0 12px;
   }
+
+  :global(.article-content h4) {
+    font-size: 1.1em;
+    font-weight: 600;
+    margin: 20px 0 8px;
+  }
+
   :global(.article-content p) {
     margin-bottom: 16px;
   }
+
   :global(.article-content ul, .article-content ol) {
     padding-left: 24px;
-    margin-bottom: 16px;
+    margin: 16px 0;
   }
+
   :global(.article-content li) {
     margin-bottom: 8px;
+  }
+
+  :global(.article-content table) {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 20px 0;
+    font-size: 14px;
+  }
+
+  :global(.article-content th, .article-content td) {
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    padding: 10px 12px;
+    text-align: left;
+  }
+
+  :global(.article-content th) {
+    background: rgba(255, 255, 255, 0.05);
+    font-weight: 600;
+  }
+
+  :global(.article-content tr:hover) {
+    background: rgba(255, 255, 255, 0.02);
+  }
+
+  :global(.article-content hr) {
+    border: none;
+    height: 1px;
+    background: rgba(255, 255, 255, 0.1);
+    margin: 24px 0;
+  }
+
+  :global(.article-content figure) {
+    margin: 20px 0;
+    text-align: center;
+  }
+
+  :global(.article-content figcaption) {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.5);
+    margin-top: 8px;
+  }
+
+  :global(.article-content strong, .article-content b) {
+    font-weight: 600;
+    color: white;
+  }
+
+  :global(.article-content em, .article-content i) {
+    font-style: italic;
   }
 </style>
