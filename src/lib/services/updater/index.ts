@@ -80,16 +80,25 @@ async function fetchWithProxy(url: string): Promise<any> {
 }
 
 /** 检查更新 */
-export async function checkForUpdate(): Promise<{ release: ReleaseInfo | null; error?: string }> {
+export async function checkForUpdate(): Promise<{ release: ReleaseInfo | null; hasUpdate: boolean; error?: string }> {
   try {
+    const currentVersion = getCurrentVersion();
+    console.log('[Updater] Current:', currentVersion);
+
     const data = await fetchWithProxy(GITHUB_API);
 
     const tagName = data.tag_name || '';
     const version = tagName.replace(/^v/, '');
 
+    console.log('[Updater] Remote:', version);
+
     if (!version) {
-      return { release: null, error: '无法解析版本号' };
+      return { release: null, hasUpdate: false, error: '无法解析版本号' };
     }
+
+    // 比较版本
+    const hasUpdate = compareVersions(currentVersion, version) > 0;
+    console.log('[Updater] Has update:', hasUpdate);
 
     // 查找 APK 下载链接
     const apkAsset = data.assets?.find((a: any) =>
@@ -105,9 +114,10 @@ export async function checkForUpdate(): Promise<{ release: ReleaseInfo | null; e
       apkSize: apkAsset?.size || 0
     };
 
-    return { release };
+    return { release, hasUpdate };
   } catch (error: any) {
-    return { release: null, error: error.message };
+    console.error('[Updater] Error:', error.message);
+    return { release: null, hasUpdate: false, error: error.message };
   }
 }
 

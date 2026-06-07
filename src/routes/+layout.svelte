@@ -51,19 +51,22 @@
 
   async function checkUpdate() {
     try {
-      const { release, error } = await checkForUpdate();
+      const { release, hasUpdate, error } = await checkForUpdate();
 
-      if (error || !release) return;
+      if (error || !release) {
+        console.log('[Update] No update available:', error);
+        return;
+      }
 
-      const currentVersion = getCurrentVersion();
-      const comparison = compareVersions(currentVersion, release.version);
-
-      if (comparison > 0) {
+      if (hasUpdate) {
+        console.log('[Update] New version available:', release.version);
         latestRelease = release;
         showUpdateDialog = true;
+      } else {
+        console.log('[Update] Already up to date');
       }
     } catch (error) {
-      // 静默处理
+      console.error('[Update] Check failed:', error);
     }
   }
 

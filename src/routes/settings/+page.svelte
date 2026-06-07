@@ -48,7 +48,7 @@
     updateMessage = '';
 
     try {
-      const { release, error } = await checkForUpdate();
+      const { release, hasUpdate, error } = await checkForUpdate();
 
       if (error) {
         updateMessage = error;
@@ -60,9 +60,7 @@
         return;
       }
 
-      const comparison = compareVersions(currentVersion, release.version);
-
-      if (comparison > 0) {
+      if (hasUpdate) {
         latestRelease = release;
         showUpdateDialog = true;
       } else {
