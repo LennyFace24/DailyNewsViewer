@@ -11,6 +11,7 @@
   import ExportDialog from '$lib/components/shared/ExportDialog.svelte';
   import AboutDialog from '$lib/components/shared/AboutDialog.svelte';
   import ConfirmDialog from '$lib/components/shared/ConfirmDialog.svelte';
+  import Progress from '$lib/components/shared/Progress.svelte';
   import { onMount } from 'svelte';
 
   $: unreadCount = $articles.filter(a => !a.isRead).length;
@@ -269,6 +270,13 @@
             <div class="stat-value">{$readingStats.totalCount}</div>
             <div class="stat-label">总计阅读</div>
           </div>
+        </div>
+        <div class="p-4 border-t border-white/5">
+          <div class="flex justify-between text-sm mb-2">
+            <span>阅读进度</span>
+            <span class="text-muted-foreground">{$readingStats.weekCount}/20 本周目标</span>
+          </div>
+          <Progress value={$readingStats.weekCount} max={20} showLabel />
         </div>
         <div class="action-row" on:click={() => goto('/stats')}>
           <BarChart3 class="w-4 h-4 text-muted-foreground" />
