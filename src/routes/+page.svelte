@@ -7,6 +7,7 @@
   import NewsList from '$lib/components/news/NewsList.svelte';
   import NewsFilter from '$lib/components/news/NewsFilter.svelte';
   import RecommendedSection from '$lib/components/recommend/RecommendedSection.svelte';
+  import LoadingSpinner from '$lib/components/shared/LoadingSpinner.svelte';
   import {
     articles, filteredArticles, displayedArticles,
     addArticlesToPool, saveToCache, loadFromCache,
@@ -271,11 +272,7 @@
 
       {#if isLoadingMore}
         <div class="flex justify-center py-6">
-          <div class="flex gap-1">
-            <div class="w-2 h-2 bg-white/30 rounded-full animate-bounce" style="animation-delay: 0ms" />
-            <div class="w-2 h-2 bg-white/30 rounded-full animate-bounce" style="animation-delay: 150ms" />
-            <div class="w-2 h-2 bg-white/30 rounded-full animate-bounce" style="animation-delay: 300ms" />
-          </div>
+          <LoadingSpinner size="sm" text="加载中..." />
         </div>
       {:else if !$hasMore}
         <div class="text-center py-6 text-xs text-muted-foreground/40">
