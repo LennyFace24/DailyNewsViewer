@@ -1,18 +1,23 @@
 <script lang="ts">
+  import { getContext } from 'svelte';
   import { slide } from 'svelte/transition';
   import { ChevronDown } from 'lucide-svelte';
 
-  export let open = false;
-  export let title = '';
+  export let id: string;
+  export let title: string;
 
-  function toggle() {
-    open = !open;
-  }
+  const { activeItems, toggle, isActive } = getContext('accordion') as {
+    activeItems: any;
+    toggle: (id: string) => void;
+    isActive: (id: string) => boolean;
+  };
+
+  $: open = $activeItems.includes(id);
 </script>
 
-<div class="collapsible">
-  <button class="trigger" on:click={toggle}>
-    <span class="title">{title}</span>
+<div class="accordion-item" class:open>
+  <button class="trigger" on:click={() => toggle(id)}>
+    <span>{title}</span>
     <ChevronDown class="w-4 h-4 transition-transform duration-200 {open ? 'rotate-180' : ''}" />
   </button>
 
@@ -24,9 +29,10 @@
 </div>
 
 <style>
-  .collapsible {
+  .accordion-item {
     border-radius: 12px;
     overflow: hidden;
+    border: 1px solid rgba(255, 255, 255, 0.06);
   }
 
   .trigger {
@@ -36,10 +42,10 @@
     width: 100%;
     padding: 14px 16px;
     background: rgba(255, 255, 255, 0.03);
-    border: 1px solid rgba(255, 255, 255, 0.06);
     color: white;
     font-size: 14px;
     font-weight: 500;
+    border: none;
     cursor: pointer;
     transition: background 0.2s;
   }
@@ -50,8 +56,5 @@
   .content {
     padding: 16px;
     background: rgba(255, 255, 255, 0.02);
-    border: 1px solid rgba(255, 255, 255, 0.04);
-    border-top: none;
-    border-radius: 0 0 12px 12px;
   }
 </style>
