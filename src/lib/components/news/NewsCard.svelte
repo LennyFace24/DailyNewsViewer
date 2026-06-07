@@ -37,7 +37,14 @@
   }
 </script>
 
-<article on:click={handleClick} class="masonry-item group cursor-pointer">
+<article
+  on:click={handleClick}
+  on:keydown={(e) => e.key === 'Enter' && handleClick()}
+  class="masonry-item group cursor-pointer"
+  role="article"
+  tabindex="0"
+  aria-label="{article.title} - {article.sourceName}"
+>
   <div class="glass-card overflow-hidden transition-all duration-200 hover:border-white/15 active:scale-[0.98] {article.isRead ? 'opacity-60' : ''}">
     <!-- 图片区 -->
     {#if article.thumbnail && $settings.showImages && !imageError}
