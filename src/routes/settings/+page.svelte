@@ -10,6 +10,7 @@
   import UpdateDialog from '$lib/components/shared/UpdateDialog.svelte';
   import ExportDialog from '$lib/components/shared/ExportDialog.svelte';
   import AboutDialog from '$lib/components/shared/AboutDialog.svelte';
+  import ConfirmDialog from '$lib/components/shared/ConfirmDialog.svelte';
   import { onMount } from 'svelte';
 
   $: unreadCount = $articles.filter(a => !a.isRead).length;
@@ -331,42 +332,24 @@
 </div>
 
 <!-- 清除缓存弹窗 -->
-{#if showClearDialog}
-  <div class="modal-overlay" on:click={() => showClearDialog = false}>
-    <div class="modal-box glass-card" on:click|stopPropagation>
-      <div class="modal-icon-box">
-        <Trash2 class="w-8 h-8 text-muted-foreground" />
-      </div>
-      <div class="modal-text">
-        <h3>清除缓存</h3>
-        <p>确定要清除缓存吗？收藏内容不会丢失。</p>
-      </div>
-      <div class="modal-actions">
-        <button class="secondary-btn" on:click={() => showClearDialog = false}>取消</button>
-        <button class="primary-btn" on:click={clearCache}>确定</button>
-      </div>
-    </div>
-  </div>
-{/if}
+<ConfirmDialog
+  bind:open={showClearDialog}
+  title="清除缓存"
+  message="确定要清除缓存吗？收藏内容不会丢失。"
+  confirmText="清除"
+  type="danger"
+  on:confirm={clearCache}
+/>
 
 <!-- 恢复默认弹窗 -->
-{#if showResetDialog}
-  <div class="modal-overlay" on:click={() => showResetDialog = false}>
-    <div class="modal-box glass-card" on:click|stopPropagation>
-      <div class="modal-icon-box">
-        <RotateCcw class="w-8 h-8 text-muted-foreground" />
-      </div>
-      <div class="modal-text">
-        <h3>恢复默认设置</h3>
-        <p>确定要恢复所有设置为默认值吗？</p>
-      </div>
-      <div class="modal-actions">
-        <button class="secondary-btn" on:click={() => showResetDialog = false}>取消</button>
-        <button class="primary-btn" on:click={() => { resetSettings(); showResetDialog = false; }}>确定</button>
-      </div>
-    </div>
-  </div>
-{/if}
+<ConfirmDialog
+  bind:open={showResetDialog}
+  title="恢复默认设置"
+  message="确定要恢复所有设置为默认值吗？"
+  confirmText="恢复"
+  type="warning"
+  on:confirm={resetSettings}
+/>
 
 <!-- 更新弹窗 -->
 <UpdateDialog
