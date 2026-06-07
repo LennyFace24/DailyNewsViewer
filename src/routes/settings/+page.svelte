@@ -13,6 +13,7 @@
   import ConfirmDialog from '$lib/components/shared/ConfirmDialog.svelte';
   import Progress from '$lib/components/shared/Progress.svelte';
   import Switch from '$lib/components/shared/Switch.svelte';
+  import TabBar from '$lib/components/shared/TabBar.svelte';
   import { onMount } from 'svelte';
 
   $: unreadCount = $articles.filter(a => !a.isRead).length;
@@ -221,20 +222,17 @@
     <!-- 外观 -->
     <section class="mb-6">
       <h2 class="section-title"><Layout class="w-3.5 h-3.5" /> 外观</h2>
-      <div class="glass-card overflow-hidden">
-        <div class="setting-row">
-          <div class="setting-label">卡片样式</div>
-          <div class="flex gap-2">
-            {#each ['compact', 'comfortable', 'spacious'] as style}
-              <button
-                class="option-btn {$settings.cardStyle === style ? 'active' : ''}"
-                on:click={() => updateSetting('cardStyle', style)}
-              >
-                {style === 'compact' ? '紧凑' : style === 'comfortable' ? '舒适' : '宽松'}
-              </button>
-            {/each}
-          </div>
-        </div>
+      <div class="glass-card overflow-hidden p-4">
+        <div class="setting-label mb-3">卡片样式</div>
+        <TabBar
+          tabs={[
+            { id: 'compact', label: '紧凑' },
+            { id: 'comfortable', label: '舒适' },
+            { id: 'spacious', label: '宽松' }
+          ]}
+          activeTab={$settings.cardStyle}
+          on:change={(e) => updateSetting('cardStyle', e.detail.id)}
+        />
       </div>
     </section>
 
