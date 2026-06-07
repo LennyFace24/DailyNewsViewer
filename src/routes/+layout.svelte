@@ -11,6 +11,7 @@
   import Onboarding from '$lib/components/shared/Onboarding.svelte';
   import QuickActions from '$lib/components/shared/QuickActions.svelte';
   import ToastContainer from '$lib/components/shared/ToastContainer.svelte';
+  import CommandPalette from '$lib/components/shared/CommandPalette.svelte';
   import { loadFromCache } from '$lib/stores/articles';
   import { checkForUpdate, getCurrentVersion, compareVersions } from '$lib/services/updater';
   import type { ReleaseInfo } from '$lib/services/updater';
@@ -23,6 +24,16 @@
   let showSplash = true;
   let showOnboarding = false;
   let showQuickActions = false;
+  let showCommandPalette = false;
+
+  // 键盘快捷键
+  function handleKeydown(e: KeyboardEvent) {
+    // Cmd/Ctrl + K 打开命令面板
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      showCommandPalette = true;
+    }
+  }
 
   $: currentPath = $page.url.pathname;
 
@@ -85,6 +96,8 @@
   });
 </script>
 
+<svelte:window on:keydown={handleKeydown} />
+
 {#if showSplash}
   <SplashScreen />
 {:else}
@@ -108,6 +121,8 @@
     <Onboarding bind:open={showOnboarding} />
 
     <QuickActions bind:open={showQuickActions} />
+
+    <CommandPalette bind:open={showCommandPalette} />
 
     <ToastContainer />
   </div>
