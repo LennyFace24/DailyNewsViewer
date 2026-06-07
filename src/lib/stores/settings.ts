@@ -17,7 +17,13 @@ const defaultSettings: AppSettings = {
   aiBaseUrl: '',
   aiApiKey: '',
   aiProvider: 'chat_completion',
-  aiModel: ''
+  aiModel: '',
+  // 通知设置
+  notificationsEnabled: false,
+  notificationFrequency: 'daily',
+  quietHoursEnabled: false,
+  quietHoursStart: '22:00',
+  quietHoursEnd: '08:00'
 };
 
 function loadSettings(): AppSettings {

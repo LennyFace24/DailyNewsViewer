@@ -14,6 +14,12 @@ export interface AppSettings {
   aiApiKey: string;
   aiProvider: 'chat_completion' | 'response' | 'anthropic';
   aiModel: string;
+  // 通知设置
+  notificationsEnabled: boolean;
+  notificationFrequency: 'hourly' | 'daily';
+  quietHoursEnabled: boolean;
+  quietHoursStart: string;
+  quietHoursEnd: string;
 }
 
 /** AI提供商类型 */

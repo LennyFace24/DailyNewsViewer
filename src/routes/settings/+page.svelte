@@ -1,6 +1,6 @@
 <script lang="ts">
   import { goto } from '$app/navigation';
-  import { Globe, Layout, Eye, CheckCheck, Trash2, RotateCcw, Info, Languages, Download, BookOpen, BarChart3 } from 'lucide-svelte';
+  import { Globe, Layout, Eye, CheckCheck, Trash2, RotateCcw, Info, Languages, Download, BookOpen, BarChart3, Bell } from 'lucide-svelte';
   import { settings, updateSetting, resetSettings } from '$lib/stores/settings';
   import { articles, markAllAsRead } from '$lib/stores/articles';
   import { ArticleCache } from '$lib/services/storage';
@@ -134,6 +134,77 @@
           </div>
           <div class="text-white/30">›</div>
         </div>
+      </div>
+    </section>
+
+    <!-- 通知 -->
+    <section class="mb-6">
+      <h2 class="section-title"><Bell class="w-3.5 h-3.5" /> 通知</h2>
+      <div class="glass-card overflow-hidden">
+        <div class="setting-row">
+          <div>
+            <div class="setting-label">推送通知</div>
+            <div class="setting-desc">新文章到达时通知</div>
+          </div>
+          <div class="toggle" class:active={$settings.notificationsEnabled} on:click={() => updateSetting('notificationsEnabled', !$settings.notificationsEnabled)}>
+            <div class="toggle-thumb" class:active={$settings.notificationsEnabled} />
+          </div>
+        </div>
+
+        {#if $settings.notificationsEnabled}
+          <div class="p-4 space-y-3 border-t border-white/5">
+            <div>
+              <label class="input-label">通知频率</label>
+              <div class="flex gap-2">
+                <button
+                  class="option-btn {$settings.notificationFrequency === 'hourly' ? 'active' : ''}"
+                  on:click={() => updateSetting('notificationFrequency', 'hourly')}
+                >
+                  每小时
+                </button>
+                <button
+                  class="option-btn {$settings.notificationFrequency === 'daily' ? 'active' : ''}"
+                  on:click={() => updateSetting('notificationFrequency', 'daily')}
+                >
+                  每天
+                </button>
+              </div>
+            </div>
+
+            <div class="flex items-center justify-between">
+              <div>
+                <div class="text-sm">安静时间</div>
+                <div class="text-xs text-muted-foreground">在此期间不发送通知</div>
+              </div>
+              <div class="toggle" class:active={$settings.quietHoursEnabled} on:click={() => updateSetting('quietHoursEnabled', !$settings.quietHoursEnabled)}>
+                <div class="toggle-thumb" class:active={$settings.quietHoursEnabled} />
+              </div>
+            </div>
+
+            {#if $settings.quietHoursEnabled}
+              <div class="flex gap-3">
+                <div class="flex-1">
+                  <label class="input-label">开始</label>
+                  <input
+                    type="time"
+                    value={$settings.quietHoursStart}
+                    on:change={(e) => updateSetting('quietHoursStart', e.currentTarget.value)}
+                    class="input-field"
+                  />
+                </div>
+                <div class="flex-1">
+                  <label class="input-label">结束</label>
+                  <input
+                    type="time"
+                    value={$settings.quietHoursEnd}
+                    on:change={(e) => updateSetting('quietHoursEnd', e.currentTarget.value)}
+                    class="input-field"
+                  />
+                </div>
+              </div>
+            {/if}
+          </div>
+        {/if}
       </div>
     </section>
 
