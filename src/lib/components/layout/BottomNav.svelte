@@ -1,7 +1,10 @@
 <script lang="ts">
+  import { createEventDispatcher } from 'svelte';
   import { page } from '$app/stores';
   import { Home, Bookmark, Compass, Settings, Clock } from 'lucide-svelte';
   import { queueCount } from '$lib/stores/queue';
+
+  const dispatch = createEventDispatcher();
 
   $: currentPath = $page.url.pathname;
 

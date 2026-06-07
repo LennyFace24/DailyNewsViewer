@@ -9,6 +9,7 @@
   import NetworkStatus from '$lib/components/shared/NetworkStatus.svelte';
   import SplashScreen from '$lib/components/shared/SplashScreen.svelte';
   import Onboarding from '$lib/components/shared/Onboarding.svelte';
+  import QuickActions from '$lib/components/shared/QuickActions.svelte';
   import { loadFromCache } from '$lib/stores/articles';
   import { checkForUpdate, getCurrentVersion, compareVersions } from '$lib/services/updater';
   import type { ReleaseInfo } from '$lib/services/updater';
@@ -20,6 +21,7 @@
   let latestRelease: ReleaseInfo | null = null;
   let showSplash = true;
   let showOnboarding = false;
+  let showQuickActions = false;
 
   $: currentPath = $page.url.pathname;
 
@@ -103,5 +105,7 @@
     />
 
     <Onboarding bind:open={showOnboarding} />
+
+    <QuickActions bind:open={showQuickActions} />
   </div>
 {/if}
