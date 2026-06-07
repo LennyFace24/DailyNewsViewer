@@ -11,6 +11,7 @@
   import ReadingMode from '$lib/components/reading/ReadingMode.svelte';
   import ShareDialog from '$lib/components/share/ShareDialog.svelte';
   import SwipeHint from '$lib/components/shared/SwipeHint.svelte';
+  import Badge from '$lib/components/shared/Badge.svelte';
 
   export let article: Article;
   export let onBack: (() => void) | undefined = undefined;
@@ -120,7 +121,7 @@
             <ArrowLeft class="w-4 h-4" />
           </button>
         {/if}
-        <span class="text-xs px-2.5 py-1 rounded-full bg-white/10 font-medium">{article.sourceName}</span>
+        <Badge variant="secondary">{article.sourceName}</Badge>
       </div>
       <div class="flex items-center gap-1">
         <button class="icon-btn" on:click={toggleQueue}>
