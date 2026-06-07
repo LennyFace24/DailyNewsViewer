@@ -3,6 +3,7 @@
   import { page } from '$app/stores';
   import { Home, Bookmark, Compass, Settings, Clock } from 'lucide-svelte';
   import { queueCount } from '$lib/stores/queue';
+  import Tooltip from '$lib/components/shared/Tooltip.svelte';
 
   const dispatch = createEventDispatcher();
 
@@ -20,13 +21,15 @@
 <nav class="bottom-nav">
   <div class="nav-items">
     {#each navItems as item}
-      <a
-        href={item.path}
-        class="nav-item {currentPath === item.path ? 'active' : ''}"
-      >
-        <svelte:component this={item.icon} class="w-5 h-5" />
-        <span>{item.label}</span>
-      </a>
+      <Tooltip text={item.label} position="top">
+        <a
+          href={item.path}
+          class="nav-item {currentPath === item.path ? 'active' : ''}"
+        >
+          <svelte:component this={item.icon} class="w-5 h-5" />
+          <span>{item.label}</span>
+        </a>
+      </Tooltip>
     {/each}
   </div>
 </nav>
