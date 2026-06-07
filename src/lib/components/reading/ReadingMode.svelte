@@ -2,6 +2,7 @@
   import { createEventDispatcher } from 'svelte';
   import { X, Minus, Plus, Sun, Moon } from 'lucide-svelte';
   import { settings, updateSetting } from '$lib/stores/settings';
+  import Switch from '$lib/components/shared/Switch.svelte';
 
   export let open = false;
 
@@ -75,13 +76,10 @@
         <!-- 图片显示 -->
         <div class="setting-item">
           <div class="setting-label">显示图片</div>
-          <div
-            class="toggle"
-            class:active={$settings.showImages}
+          <Switch
+            checked={$settings.showImages}
             on:click={() => updateSetting('showImages', !$settings.showImages)}
-          >
-            <div class="toggle-thumb" class:active={$settings.showImages} />
-          </div>
+          />
         </div>
       </div>
     </div>
