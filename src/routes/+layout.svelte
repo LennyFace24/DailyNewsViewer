@@ -6,6 +6,7 @@
   import BottomNav from '$lib/components/layout/BottomNav.svelte';
   import ExitDialog from '$lib/components/shared/ExitDialog.svelte';
   import UpdateDialog from '$lib/components/shared/UpdateDialog.svelte';
+  import NetworkStatus from '$lib/components/shared/NetworkStatus.svelte';
   import { loadFromCache } from '$lib/stores/articles';
   import { checkForUpdate, getCurrentVersion, compareVersions } from '$lib/services/updater';
   import type { ReleaseInfo } from '$lib/services/updater';
@@ -84,6 +85,8 @@
   </main>
 
   <BottomNav on:back={handleBack} />
+
+  <NetworkStatus />
 
   <ExitDialog bind:open={showExitDialog} on:confirm={handleExit} />
 
